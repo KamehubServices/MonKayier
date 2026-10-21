@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: MONKAYIER REST API
+  description: API v1 de la plateforme éducative MONKAYIER (Porteur KAMEHUB SERVICES SARL-U).
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Serveur de développement local
+
+paths:
+  /health:
+    get:
+      summary: Contrôle technique minimal du service
+      responses:
+        '200':
+          description: Service opérationnel
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "pass"
+                      service:
+                        type: string
+                        example: "MONKAYIER API"
+                      version:
+                        type: string
+                        example: "v1"
+                      timestamp:
+                        type: string
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+
+  /auth/register:
+    post:
+      summary: Inscription publique d'un élève
+      description: Crée un compte utilisateur et lui attribue par défaut et exclusivement le rôle "student".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - first_name
+                - last_name
+                - password
+              properties:
+                first_name:
+                  type: string
+                  example: "Koffi"
+                last_name:
+                  type: string
+                  example: "Mensah"
+                email:
+                  type: string
+                  format: email
+                  example: "koffi.mensah@example.tg"
+                phone:
+                  type: string
+                  example: "+22890000000"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "MonMotDePasse123!"
+                preferred_language:
+                  type: string
+                  enum: [fr, en, ee, kbp]
+                  default: fr
+      responses:
+        '201':
+          description: Compte créé avec succès et jeton émis.
+        '422':
+          description: Erreur de validation des champs.
+
+  /auth/login:
+    post:
+      summary: Authentification et ouverture de session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login
+                - password
+              properties:
+                login:
+                  type: string
+                  description: Adresse e-mail ou numéro de téléphone
+                  example: "koffi.mensah@example.tg"
+                password:
+                  type: string
+                  format: password
+                  example: "MonMotDePasse123!"
+                device_name:
+                  type: string
+                  example: "android-chrome"
+      responses:
+        '200':
+          description: Connexion réussie et jeton Sanctum renvoyé.
+        '401':
+          description: Identifiant ou mot de passe incorrect (réponse générique).
+        '403':
+          description: Compte suspendu.
+
+  /auth/logout:
+    post:
+      summary: Déconnexion et révocation du jeton côté serveur
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Jeton révoqué.
+
+  /auth/forgot-password:
+    post:
+      summary: Demande de réinitialisation de mot de passe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login
+              properties:
+                login:
+                  type: string
+                  example: "koffi.mensah@example.tg"
+      responses:
+        '200':
+          description: Réponse générique anti-énumération confirmant la prise en compte.
+
+  /me:
+    get:
+      summary: Consultation du profil de l'utilisateur connecté
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Données du profil et rôles actifs.
+        '401':
+          description: Non authentifié.
+    patch:
+      summary: Mise à jour des informations personnelles autorisées
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                birth_date:
+                  type: string
+                  format: date
+                preferred_language:
+                  type: string
+                  enum: [fr, en, ee, kbp]
+                bio:
+                  type: string
+      responses:
+        '200':
+          description: Profil mis à jour.
+        '401':
+          description: Non authentifié.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

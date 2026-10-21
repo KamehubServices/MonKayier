@@ -1,0 +1,27 @@
+:root {
+  --mk-navy: #18345F;
+  --mk-night: #111126;
+  --mk-indigo: #5143E8;
+  --mk-yellow: #F6B900;
+  --mk-lime: #C8F34A;
+  --mk-lavender: #E9E5FF;
+  --mk-page: #F3F4F9;
+  --mk-surface: #FFFFFF;
+  --mk-text: #171827;
+  --mk-text-muted: #6F7182;
+  --mk-border: #E4E5ED;
+  --mk-soft-coral: #FFF0EA;
+
+  --mk-radius-control: 12px;
+  --mk-radius-card: 20px;
+  --mk-radius-pill: 999px;
+
+  --mk-space-1: 4px;
+  --mk-space-2: 8px;
+  --mk-space-3: 12px;
+  --mk-space-4: 16px;
+  --mk-space-6: 24px;
+  --mk-space-8: 32px;
+
+  --mk-font: Inter, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
