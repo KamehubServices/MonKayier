@@ -1,0 +1,76 @@
+/**
+ * MONKAYIER — Design Tokens Officiels V1.0
+ * Source de vérité : MonKayier Maquette.pdf & Charte Graphique Officielle
+ * Porteur : KAMEHUB SERVICES SARL-U
+ */
+
+:root {
+  /* ==========================================================================
+     1. PALETTE DE MARQUE & VITRINE (Landing, Inscription, Auth)
+     ========================================================================== */
+  --mk-brand-navy: #14325C;       /* Titres, hero, boutons principaux vitrine */
+  --mk-brand-sky: #3FA9F5;        /* Accents vitrine, bordure focus champs */
+  --mk-brand-yellow: #FFB703;     /* Boutons d'appel à l'action vitrine (#F6B900) */
+  --mk-brand-surface: #F7F9FC;    /* Fond des pages vitrine */
+  --mk-brand-text-sub: #3C5578;   /* Texte secondaire vitrine */
+
+  /* ==========================================================================
+     2. PALETTE DE L'APPLICATION CONNECTÉE (Élève, Enseignant, Parent)
+     ========================================================================== */
+  --mk-app-ink: #0E1022;          /* Encre sombre : texte principal, cartes d'accueil sombres (#111126) */
+  --mk-app-indigo: #4F46E5;       /* Indigo : action clé, bouton principal, progression (#5143E8) */
+  --mk-app-lime: #D4F25C;         /* Citron / Lime : accent fort, anneau de progression, badges (#C8F34A) */
+  --mk-app-lavender: #ECEBFF;     /* Lavande douce : tags d'information, cartes d'explication (#E9E5FF) */
+  --mk-app-bg: #F5F6FA;           /* Fond d'écran de l'application connectée (#F3F4F9) */
+  --mk-app-surface: #FFFFFF;      /* Fond des cartes et panneaux */
+  --mk-app-text-muted: #4B506A;   /* Texte secondaire, métadonnées, descriptions (#6F7182) */
+  --mk-app-border: #E8EAF2;       /* Bordures discrètes des cartes (#E4E5ED) */
+  --mk-app-soft-coral: #FFF0EA;   /* Surface saumon : explications IA hors cours */
+
+  /* ==========================================================================
+     3. ÉTIQUETTES D'ÉTAT & ACCESSIBILITÉ (WCAG AA)
+     ========================================================================== */
+  --mk-status-info-bg: #ECEBFF;
+  --mk-status-info-text: #3730A3;
+  --mk-status-warning-bg: #FFE9E2;
+  --mk-status-warning-text: #8A2A12;
+  --mk-status-success-bg: #E6F7B5;
+  --mk-status-success-text: #2F4A00;
+
+  /* ==========================================================================
+     4. FORMES, RAYONS & ARRONDIS
+     ========================================================================== */
+  --mk-radius-input: 12px;        /* Champs de saisie */
+  --mk-radius-btn-mobile: 14px;   /* Boutons sur mobile */
+  --mk-radius-card-mobile: 20px;  /* Cartes sur mobile */
+  --mk-radius-card-web: 28px;     /* Cartes sur écran web desktop */
+  --mk-radius-pill: 999px;        /* Boutons pilule web & badges */
+
+  /* ==========================================================================
+     5. GRILLE & ESPACEMENTS
+     ========================================================================== */
+  --mk-sidebar-width: 236px;      /* Largeur barre latérale desktop */
+  --mk-mobile-tabbar-height: 78px;/* Hauteur barre de navigation mobile */
+  --mk-container-max: 1280px;
+
+  --mk-space-1: 4px;
+  --mk-space-2: 8px;
+  --mk-space-3: 12px;
+  --mk-space-4: 16px;
+  --mk-space-5: 20px;
+  --mk-space-6: 24px;
+  --mk-space-8: 32px;
+  --mk-space-12: 48px;
+
+  /* ==========================================================================
+     6. TYPOGRAPHIE
+     ========================================================================== */
+  --mk-font-display: Sora, Poppins, system-ui, sans-serif;
+  --mk-font-body: Inter, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* ==========================================================================
+     7. OMBRES
+     ========================================================================== */
+  --mk-shadow-soft: 0 18px 40px -30px rgba(14, 16, 34, 0.18);
+  --mk-shadow-card: 0 4px 20px rgba(14, 16, 34, 0.05);
+}
