@@ -28,5 +28,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(TogoCurriculaSeeder::class);
         $this->call(AssessmentSeeder::class);
+        $this->call(SchoolAndClassSeeder::class);
     }
 }

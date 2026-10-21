@@ -33,17 +33,21 @@ class AssessmentAndRevisionTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         // Élève 1
-        $this->student = User::create([
-            'email' => 'koffi.student@monkayier.tg',
-            'password_hash' => bcrypt('StudentPass2026!'),
-            'status' => 'active',
-            'email_verified_at' => now(),
-        ]);
-        UserProfile::create([
-            'user_id' => $this->student->id,
-            'first_name' => 'Koffi',
-            'last_name' => 'Mensah',
-        ]);
+        $this->student = User::firstOrCreate(
+            ['email' => 'koffi.student@monkayier.tg'],
+            [
+                'password_hash' => bcrypt('StudentPass2026!'),
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        UserProfile::firstOrCreate(
+            ['user_id' => $this->student->id],
+            [
+                'first_name' => 'Koffi',
+                'last_name' => 'Mensah',
+            ]
+        );
         $this->student->assignRole('student');
 
         // Élève 2 (pour tester l'isolation horizontale)

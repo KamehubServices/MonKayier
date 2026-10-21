@@ -42,3 +42,12 @@ Route::prefix('admin')->group(function () {
     Route::post('/imports/upload', [AdminWebController::class, 'uploadImport']);
     Route::get('/audit', [AdminWebController::class, 'dashboard']);
 });
+
+// 4. Espace Enseignants & Devoirs (Phase 8)
+Route::prefix('teacher')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Web\TeacherWebController::class, 'dashboard']);
+    Route::get('/classes', [\App\Http\Controllers\Web\TeacherWebController::class, 'classes']);
+    Route::get('/assignments', [\App\Http\Controllers\Web\TeacherWebController::class, 'assignments']);
+    Route::get('/assignments/{id}/submissions', [\App\Http\Controllers\Web\TeacherWebController::class, 'submissions']);
+    Route::post('/submissions/{id}/grade', [\App\Http\Controllers\Web\TeacherWebController::class, 'gradeSubmission']);
+});

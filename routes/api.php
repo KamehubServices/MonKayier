@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\V1\CurriculumController;
 use App\Http\Controllers\Api\V1\EducationReferentialController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\LearningResourceController;
+use App\Http\Controllers\Api\V1\StudentAssignmentApiController;
+use App\Http\Controllers\Api\V1\TeacherApiController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\AssignCorrelationId;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -65,9 +67,24 @@ Route::middleware([AssignCorrelationId::class])->prefix('v1')->group(function ()
         Route::get('/attempts/{id}/result', [AssessmentApiController::class, 'result']);
         Route::get('/me/revision-plan', [AssessmentApiController::class, 'revisionPlan']);
         Route::post('/me/revision-plan/tasks/{id}/complete', [AssessmentApiController::class, 'completeRevisionTask']);
+
+        // 8. Devoirs Élèves (Phase 8)
+        Route::prefix('student')->group(function () {
+            Route::get('/assignments', [StudentAssignmentApiController::class, 'index']);
+            Route::post('/assignments/{id}/submit', [StudentAssignmentApiController::class, 'submit']);
+        });
+
+        // 9. Espace Enseignants & Notations (Phase 8)
+        Route::prefix('teacher')->group(function () {
+            Route::get('/classes', [TeacherApiController::class, 'classes']);
+            Route::get('/assignments', [TeacherApiController::class, 'assignments']);
+            Route::post('/assignments', [TeacherApiController::class, 'createAssignment']);
+            Route::get('/assignments/{id}/submissions', [TeacherApiController::class, 'submissions']);
+            Route::post('/submissions/{id}/grade', [TeacherApiController::class, 'gradeSubmission']);
+        });
     });
 
-    // 8. Administration éditoriale et validation des référentiels
+    // 10. Administration éditoriale et validation des référentiels
     Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->prefix('admin')->group(function () {
         Route::post('/imports', [AdminResourceController::class, 'createImport']);
         Route::post('/resources/{id}/submit-review', [AdminResourceController::class, 'submitReview']);
