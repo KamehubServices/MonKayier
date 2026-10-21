@@ -181,8 +181,247 @@ paths:
         '401':
           description: Non authentifié.
 
+  /education/cycles:
+    get:
+      summary: Liste des cycles scolaires actifs (Primaire, Collège, Lycée, Technique)
+      tags: [Education]
+      responses:
+        '200':
+          description: Liste ordonnée des cycles.
+
+  /education/levels:
+    get:
+      summary: Liste des niveaux/classes (6e à Terminale) avec filtre optionnel par cycle
+      tags: [Education]
+      parameters:
+        - name: cycle
+          in: query
+          schema:
+            type: string
+          description: Code du cycle (ex. college, lycee)
+      responses:
+        '200':
+          description: Niveaux scolaires correspondants.
+
+  /education/tracks:
+    get:
+      summary: Liste des séries et parcours disponibles pour un niveau (ex. A4, CD, F)
+      tags: [Education]
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+          description: Code du niveau (ex. TLE)
+      responses:
+        '200':
+          description: Séries disponibles.
+
+  /education/subjects:
+    get:
+      summary: Liste des matières officielles et coefficients selon le niveau et la série
+      tags: [Education]
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+          description: Code ou UUID du niveau
+        - name: track
+          in: query
+          schema:
+            type: string
+          description: Code ou UUID de la série (ex. CD)
+      responses:
+        '200':
+          description: Matières, coefficients et volumes horaires officiels.
+
+  /curricula:
+    get:
+      summary: Programmes scolaires officiels validés et publiés
+      tags: [Curricula]
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: track
+          in: query
+          schema:
+            type: string
+        - name: school_year
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des programmes applicables.
+
+  /curricula/{id}/tree:
+    get:
+      summary: Arborescence complète du programme (Domaines, Chapitres, Objectifs observables)
+      tags: [Curricula]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Arbre hiérarchique avec compétences et objectifs d'apprentissage.
+
+  /resources:
+    get:
+      summary: Bibliothèque pédagogique publique (Cours, Fiches, Exercices validés et publiés)
+      tags: [Resources]
+      parameters:
+        - name: level_id
+          in: query
+          schema:
+            type: string
+        - name: subject_id
+          in: query
+          schema:
+            type: string
+        - name: chapter_id
+          in: query
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ressources publiées conformes aux filtres.
+
+  /resources/{id}:
+    get:
+      summary: Détails d'une ressource pédagogique avec sources certifiées et fichiers attachés
+      tags: [Resources]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détail complet de la ressource.
+        '403':
+          description: Accès interdit (ressource non publiée ou corrigé restreint).
+        '404':
+          description: Ressource introuvable.
+
+  /admin/imports:
+    post:
+      summary: Créer un job d'importation batch de référentiels (Admin uniquement)
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [file_name]
+              properties:
+                file_name:
+                  type: string
+                total_rows:
+                  type: integer
+      responses:
+        '201':
+          description: Job d'import créé.
+        '403':
+          description: Réservé aux administrateurs.
+
+  /admin/resources/{id}/submit-review:
+    post:
+      summary: Soumettre une ressource au comité de relecture éditorial
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ressource passée en relecture.
+
+  /admin/resources/{id}/review:
+    post:
+      summary: Valider ou rejeter une ressource (Règle d'anti-auto-validation appliquée)
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [approved, rejected, revision_requested]
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Décision enregistrée.
+        '403':
+          description: L'auteur ne peut pas approuver sa propre ressource.
+
+  /admin/resources/{id}/publish:
+    post:
+      summary: Publier une ressource validée
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ressource publiée et rendue accessible.
+        '422':
+          description: Ressource non préalablement approuvée.
+
+  /admin/content-versions/{id}/diff:
+    get:
+      summary: Comparer les versions et détecter les modifications éditoriales
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Diff entre la version actuelle et la précédente.
+
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
+

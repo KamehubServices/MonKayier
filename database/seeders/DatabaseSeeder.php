@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database with essential controlled roles.
+     * Seed the application's database with essential controlled roles and Togo referentials.
      */
     public function run(): void
     {
@@ -25,5 +25,7 @@ class DatabaseSeeder extends Seeder
         foreach ($roles as $r) {
             Role::firstOrCreate(['code' => $r['code']], $r);
         }
+
+        $this->call(TogoCurriculaSeeder::class);
     }
 }
