@@ -1,0 +1,78 @@
+/**
+ * MONKAYIER — Design Tokens Officiels V1.0
+ * Source de vérité : MonKayier Maquette.pdf & Charte Graphique Officielle
+ * Porteur : KAMEHUB SERVICES SARL-U
+ */
+
+:root {
+  /* ==========================================================================
+     1. PALETTE DE MARQUE & VITRINE (Landing, Inscription, Auth)
+     ========================================================================== */
+  --mk-navy: #18345F;             /* Titres, hero, boutons principaux vitrine (#14325C / #18345F) */
+  --mk-brand-sky: #3FA9F5;        /* Accents vitrine, bordure focus champs */
+  --mk-yellow: #F6B900;           /* Boutons d'appel à l'action vitrine (#FFB703 / #F6B900) */
+  --mk-brand-surface: #F7F9FC;    /* Fond des pages vitrine */
+  --mk-brand-text-sub: #3C5578;   /* Texte secondaire vitrine */
+
+  /* ==========================================================================
+     2. PALETTE DE L'APPLICATION CONNECTÉE (Élève, Enseignant, Parent)
+     ========================================================================== */
+  --mk-night: #111126;            /* Encre sombre : menu actif, carte d'accueil sombre (#0E1022 / #111126) */
+  --mk-indigo: #5143E8;           /* Indigo : action clé, bouton principal, progression (#4F46E5 / #5143E8) */
+  --mk-lime: #C8F34A;             /* Citron / Lime : accent fort, anneau de progression, badges (#D4F25C / #C8F34A) */
+  --mk-lavender: #E9E5FF;         /* Lavande douce : tags d'information, sélection (#ECEBFF / #E9E5FF) */
+  --mk-page: #F3F4F9;             /* Fond d'écran de l'application connectée (#F5F6FA / #F3F4F9) */
+  --mk-surface: #FFFFFF;          /* Fond des cartes et panneaux */
+  --mk-text: #171827;             /* Texte principal sombre */
+  --mk-text-muted: #6F7182;       /* Texte secondaire, métadonnées, descriptions */
+  --mk-border: #E4E5ED;           /* Bordures discrètes des cartes */
+  --mk-soft-coral: #FFF0EA;       /* Surface saumon : explications IA hors cours */
+
+  /* ==========================================================================
+     3. ÉTIQUETTES D'ÉTAT & ACCESSIBILITÉ (WCAG AA)
+     ========================================================================== */
+  --mk-status-info-bg: #ECEBFF;
+  --mk-status-info-text: #3730A3;
+  --mk-status-warning-bg: #FFF3CD;
+  --mk-status-warning-text: #856404;
+  --mk-status-success-bg: #E6F7B5;
+  --mk-status-success-text: #2F4A00;
+  --mk-status-danger-bg: #F8D7DA;
+  --mk-status-danger-text: #721C24;
+
+  /* ==========================================================================
+     4. FORMES, RAYONS & ARRONDIS
+     ========================================================================== */
+  --mk-radius-control: 12px;      /* Champs de saisie */
+  --mk-radius-btn-mobile: 14px;   /* Boutons sur mobile */
+  --mk-radius-card: 20px;         /* Cartes standard */
+  --mk-radius-card-lg: 24px;      /* Cartes d'accueil web */
+  --mk-radius-pill: 999px;        /* Boutons pilule web & badges */
+
+  /* ==========================================================================
+     5. GRILLE & ESPACEMENTS
+     ========================================================================== */
+  --mk-sidebar-width: 250px;      /* Largeur barre latérale desktop */
+  --mk-mobile-tabbar-height: 70px;/* Hauteur barre de navigation mobile */
+  --mk-container-max: 1280px;
+
+  --mk-space-1: 4px;
+  --mk-space-2: 8px;
+  --mk-space-3: 12px;
+  --mk-space-4: 16px;
+  --mk-space-5: 20px;
+  --mk-space-6: 24px;
+  --mk-space-8: 32px;
+  --mk-space-12: 48px;
+
+  /* ==========================================================================
+     6. TYPOGRAPHIE
+     ========================================================================== */
+  --mk-font: Inter, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* ==========================================================================
+     7. OMBRES
+     ========================================================================== */
+  --mk-shadow-soft: 0 14px 34px -10px rgba(17, 17, 38, 0.08);
+  --mk-shadow-card: 0 4px 20px rgba(17, 17, 38, 0.04);
+}
