@@ -150,4 +150,88 @@ class StudentWebController extends Controller
     {
         return view('student.assistant');
     }
+
+    /**
+     * Catalogue des évaluations et exercices interactifs (Phase 6).
+     */
+    public function exercises(Request $request): View
+    {
+        $query = \App\Models\Assessment::with(['subject', 'resource'])
+            ->where('status', 'published');
+
+        if ($request->filled('subject')) {
+            $code = $request->query('subject');
+            $query->whereHas('subject', function ($q) use ($code) {
+                $q->where('code', $code);
+            });
+        }
+
+        $assessments = $query->get();
+        $subjects = Subject::where('is_active', true)->get();
+
+        return view('student.exercises.index', [
+            'assessments' => $assessments,
+            'subjects' => $subjects,
+            'selectedSubject' => $request->query('subject'),
+        ]);
+    }
+
+    /**
+     * Lecteur et lecteur interactif de quiz/évaluation.
+     */
+    public function exercisePlayer(string $id): View
+    {
+        $assessment = \App\Models\Assessment::with(['questions.options', 'subject', 'resource'])
+            ->where('status', 'published')
+            ->findOrFail($id);
+
+        return view('student.exercises.show', [
+            'assessment' => $assessment,
+        ]);
+    }
+
+    /**
+     * Consultation des résultats et corrigés commentés.
+     */
+    public function exerciseResult(string $id): View
+    {
+        $attempt = \App\Models\AssessmentAttempt::with([
+            'assessment.subject',
+            'assessment.resource',
+            'answers.question.options',
+            'answers.question.answerKey',
+        ])->findOrFail($id);
+
+        return view('student.exercises.result', [
+            'attempt' => $attempt,
+        ]);
+    }
+
+    /**
+     * Plan de révision personnalisé et adaptatif.
+     */
+    public function revisions(Request $request): View
+    {
+        $plan = \App\Models\RevisionPlan::with(['tasks.resource.subject', 'tasks.objective'])
+            ->where('status', 'active')
+            ->first();
+
+        return view('student.revisions', [
+            'plan' => $plan,
+        ]);
+    }
+
+    /**
+     * Tableau de progression des compétences scolaires.
+     */
+    public function progress(Request $request): View
+    {
+        $competencies = \App\Models\StudentCompetency::with('objective.topic.curriculum')
+            ->take(20)
+            ->get();
+
+        return view('student.progress', [
+            'competencies' => $competencies,
+        ]);
+    }
 }

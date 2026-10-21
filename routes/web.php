@@ -22,9 +22,11 @@ Route::prefix('student')->group(function () {
     Route::get('/library', [StudentWebController::class, 'library']);
     Route::get('/reader/{id}', [StudentWebController::class, 'reader']);
     Route::get('/assistant', [StudentWebController::class, 'assistant']);
-    Route::get('/exercises', [StudentWebController::class, 'subjects']);
-    Route::get('/revisions', [StudentWebController::class, 'dashboard']);
-    Route::get('/progress', [StudentWebController::class, 'dashboard']);
+    Route::get('/exercises', [StudentWebController::class, 'exercises']);
+    Route::get('/exercises/{id}', [StudentWebController::class, 'exercisePlayer']);
+    Route::get('/exercises/{id}/result', [StudentWebController::class, 'exerciseResult']);
+    Route::get('/revisions', [StudentWebController::class, 'revisions']);
+    Route::get('/progress', [StudentWebController::class, 'progress']);
 });
 
 // 3. Back-Office d'Administration des Référentiels & Bibliothèque

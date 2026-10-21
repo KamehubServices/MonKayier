@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminResourceController;
+use App\Http\Controllers\Api\V1\AssessmentApiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CurriculumController;
 use App\Http\Controllers\Api\V1\EducationReferentialController;
@@ -53,7 +54,20 @@ Route::middleware([AssignCorrelationId::class])->prefix('v1')->group(function ()
     Route::get('/resources', [LearningResourceController::class, 'index']);
     Route::get('/resources/{id}', [LearningResourceController::class, 'show']);
 
-    // 7. Administration éditoriale et validation des référentiels
+    // 7. Évaluations, Quiz interactifs et Révisions (Phase 6)
+    Route::get('/assessments', [AssessmentApiController::class, 'index']);
+    Route::get('/assessments/{id}', [AssessmentApiController::class, 'show']);
+
+    Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
+        Route::post('/assessments/{id}/attempts', [AssessmentApiController::class, 'startAttempt']);
+        Route::put('/attempts/{id}/answers/{questionId}', [AssessmentApiController::class, 'saveAnswer']);
+        Route::post('/attempts/{id}/submit', [AssessmentApiController::class, 'submit']);
+        Route::get('/attempts/{id}/result', [AssessmentApiController::class, 'result']);
+        Route::get('/me/revision-plan', [AssessmentApiController::class, 'revisionPlan']);
+        Route::post('/me/revision-plan/tasks/{id}/complete', [AssessmentApiController::class, 'completeRevisionTask']);
+    });
+
+    // 8. Administration éditoriale et validation des référentiels
     Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->prefix('admin')->group(function () {
         Route::post('/imports', [AdminResourceController::class, 'createImport']);
         Route::post('/resources/{id}/submit-review', [AdminResourceController::class, 'submitReview']);
