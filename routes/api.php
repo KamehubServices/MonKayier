@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\CurriculumController;
 use App\Http\Controllers\Api\V1\EducationReferentialController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\LearningResourceController;
+use App\Http\Controllers\Api\V1\ParentApiController;
 use App\Http\Controllers\Api\V1\StudentAssignmentApiController;
 use App\Http\Controllers\Api\V1\TeacherApiController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -82,9 +83,19 @@ Route::middleware([AssignCorrelationId::class])->prefix('v1')->group(function ()
             Route::get('/assignments/{id}/submissions', [TeacherApiController::class, 'submissions']);
             Route::post('/submissions/{id}/grade', [TeacherApiController::class, 'gradeSubmission']);
         });
+
+        // 10. Espace Parents & Supervision (Phase 9)
+        Route::prefix('parent')->group(function () {
+            Route::get('/children', [ParentApiController::class, 'children']);
+            Route::post('/link', [ParentApiController::class, 'linkChild']);
+            Route::get('/children/{id}/report', [ParentApiController::class, 'report']);
+        });
+
+        // Liaison côté élève (génération du code parent)
+        Route::post('/student/link-code', [ParentApiController::class, 'generateStudentCode']);
     });
 
-    // 10. Administration éditoriale et validation des référentiels
+    // 11. Administration éditoriale et validation des référentiels
     Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->prefix('admin')->group(function () {
         Route::post('/imports', [AdminResourceController::class, 'createImport']);
         Route::post('/resources/{id}/submit-review', [AdminResourceController::class, 'submitReview']);

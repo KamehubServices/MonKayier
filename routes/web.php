@@ -51,3 +51,9 @@ Route::prefix('teacher')->group(function () {
     Route::get('/assignments/{id}/submissions', [\App\Http\Controllers\Web\TeacherWebController::class, 'submissions']);
     Route::post('/submissions/{id}/grade', [\App\Http\Controllers\Web\TeacherWebController::class, 'gradeSubmission']);
 });
+
+// 5. Espace Parents & Tuteurs (Phase 9)
+Route::prefix('parent')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Web\ParentWebController::class, 'dashboard']);
+    Route::post('/link', [\App\Http\Controllers\Web\ParentWebController::class, 'linkChild']);
+});
