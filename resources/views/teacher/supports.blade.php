@@ -1,0 +1,14 @@
+@extends('layouts.teacher')
+
+@section('title', 'Mes supports — MonKayier')
+
+@section('content')
+<div class="r"><div><h1 style="font-size:32px">Mes supports</h1><div class="mu" style="font-size:14px;margin-top:4px">Cours, exercices et sujets que vous partagez avec vos classes</div></div><a class="bt" href="#">Ajouter un support</a></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="ch on">Tous</span><span class="ch">Cours</span><span class="ch">Exercices</span><span class="ch">Sujets</span><span class="ch">Brouillons</span></div>
+<div class="g3"><div class="c" style="border:1.5px dashed #C9CDE0;box-shadow:none;background:#FAFAFD;align-items:center;justify-content:center;text-align:center;gap:10px"><b class="hd" style="font-size:18px">Déposer un fichier</b><span class="mu">PDF, photos de cahier ou document Word</span><a class="bt g" href="#">Parcourir</a></div>
+<div class="c"><div class="r"><span class="tg">Cours</span><span class="tg k">Publié</span></div><b class="hd" style="font-size:18px">Analyse · Chapitre 3 : Limites</b><span class="mu">Terminale D · PDF · 14 pages</span><div class="r" style="margin-top:6px"><span class="mu">Partagé avec 1 classe</span><a href="#" style="font-weight:700;color:#4F46E5">Modifier</a></div></div>
+<div class="c"><div class="r"><span class="tg">Exercices</span><span class="tg k">Publié</span></div><b class="hd" style="font-size:18px">Série 2 · Dérivation</b><span class="mu">Première C · 12 exercices avec corrigés</span><div class="r" style="margin-top:6px"><span class="mu">Partagé avec 1 classe</span><a href="#" style="font-weight:700;color:#4F46E5">Modifier</a></div></div>
+<div class="c"><div class="r"><span class="tg">Sujet</span><span class="tg o">Brouillon IA</span></div><b class="hd" style="font-size:18px">Composition · Limites et dérivation</b><span class="mu">Terminale D · 2 h · Sur 20</span><div class="r" style="margin-top:6px"><span class="mu">À valider avant publication</span><a href="/teacher/generator" style="font-weight:700;color:#4F46E5">Ouvrir</a></div></div>
+<div class="c"><div class="r"><span class="tg">Cours</span><span class="tg k">Publié</span></div><b class="hd" style="font-size:18px">Géométrie · Vecteurs</b><span class="mu">Seconde A · Photos de cahier · 6 pages</span><div class="r" style="margin-top:6px"><span class="mu">Partagé avec 2 classes</span><a href="#" style="font-weight:700;color:#4F46E5">Modifier</a></div></div>
+<div class="c"><div class="r"><span class="tg">Exercices</span><span class="tg o">Brouillon</span></div><b class="hd" style="font-size:18px">Probabilités · Révisions</b><span class="mu">Terminale D · 8 exercices</span><div class="r" style="margin-top:6px"><span class="mu">Non partagé</span><a href="#" style="font-weight:700;color:#4F46E5">Modifier</a></div></div></div>
+@endsection

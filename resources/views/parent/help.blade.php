@@ -1,0 +1,7 @@
+@extends('layouts.parent')
+
+@section('title', 'Aide et contact — Espace Parent MonKayier')
+
+@section('content')
+<div><h1 style="font-size:32px">Aide et contact</h1><div class="mu" style="font-size:14px;margin-top:4px">Une question sur le suivi de votre enfant ?</div></div><div class="g2" style="grid-template-columns:1.2fr 1fr"><div class="c"><h3 style="font-size:18px">Questions fréquentes</h3><div class="rw"><div><b>Comment lier le compte de mon enfant ?</b><div class="mu">Avec le code de liaison de son compte</div></div><span class="mu">Lire</span></div><div class="rw"><div><b>Que voit l’assistant IA ?</b><div class="mu">Ses cours importés et ses exercices</div></div><span class="mu">Lire</span></div><div class="rw"><div><b>Puis-je voir ses conversations ?</b><div class="mu">Non, elles restent privées</div></div><span class="mu">Lire</span></div><div class="rw"><div><b>Comment changer mes alertes ?</b><div class="mu">Dans Notifications</div></div><span class="mu">Lire</span></div></div><div class="c" style="gap:12px"><h3 style="font-size:18px">Nous écrire</h3><div style="border:1.5px solid #CBD6E6;border-radius:12px;padding:12px 14px;background:#fff;box-sizing:border-box;width:100%;color:#4B506A">Votre adresse e-mail</div><div style="border:1.5px solid #CBD6E6;border-radius:12px;padding:12px 14px;background:#fff;box-sizing:border-box;width:100%;color:#4B506A;min-height:110px">Votre message…</div><a class="bt" href="#" style="align-self:flex-start">Envoyer</a></div></div>
+@endsection

@@ -54,3 +54,6 @@ desktop.ini
 # Fichiers temporaires d'exécution de tests / scratch
 /scratch/
 /tmp/
+/public/tts_cache/
+check_dom_loaded.py
+MonKayier.code-workspace

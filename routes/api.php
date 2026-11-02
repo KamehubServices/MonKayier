@@ -1,106 +1,19 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AdminResourceController;
-use App\Http\Controllers\Api\V1\AssessmentApiController;
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\CurriculumController;
-use App\Http\Controllers\Api\V1\EducationReferentialController;
-use App\Http\Controllers\Api\V1\HealthController;
-use App\Http\Controllers\Api\V1\LearningResourceController;
-use App\Http\Controllers\Api\V1\ParentApiController;
-use App\Http\Controllers\Api\V1\StudentAssignmentApiController;
-use App\Http\Controllers\Api\V1\TeacherApiController;
-use App\Http\Controllers\Api\V1\UserController;
-use App\Http\Middleware\AssignCorrelationId;
-use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes — MONKAYIER API v1
+| API Routes — MONKAYIER
 |--------------------------------------------------------------------------
 */
 
-Route::middleware([AssignCorrelationId::class])->prefix('v1')->group(function () {
-
-    // 1. Contrôle technique
-    Route::get('/health', [HealthController::class, 'check']);
-
-    // 2. Authentification et réinitialisation (avec rate-limiting)
-    Route::prefix('auth')->group(function () {
-        Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
-        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
-        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
-
-        Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-    });
-
-    // 3. Profil utilisateur connecté
-    Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
-        Route::get('/me', [UserController::class, 'me']);
-        Route::patch('/me', [UserController::class, 'updateProfile']);
-    });
-
-    // 4. Référentiels scolaires du Togo (Cycles, Niveaux, Séries, Matières)
-    Route::prefix('education')->group(function () {
-        Route::get('/cycles', [EducationReferentialController::class, 'cycles']);
-        Route::get('/levels', [EducationReferentialController::class, 'levels']);
-        Route::get('/tracks', [EducationReferentialController::class, 'tracks']);
-        Route::get('/subjects', [EducationReferentialController::class, 'subjects']);
-    });
-
-    // 5. Programmes scolaires et arborescence (Domaines, Chapitres, Objectifs)
-    Route::get('/curricula', [CurriculumController::class, 'index']);
-    Route::get('/curricula/{id}/tree', [CurriculumController::class, 'tree']);
-
-    // 6. Bibliothèque pédagogique (Considération stricte de publication)
-    Route::get('/resources', [LearningResourceController::class, 'index']);
-    Route::get('/resources/{id}', [LearningResourceController::class, 'show']);
-
-    // 7. Évaluations, Quiz interactifs et Révisions (Phase 6)
-    Route::get('/assessments', [AssessmentApiController::class, 'index']);
-    Route::get('/assessments/{id}', [AssessmentApiController::class, 'show']);
-
-    Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
-        Route::post('/assessments/{id}/attempts', [AssessmentApiController::class, 'startAttempt']);
-        Route::put('/attempts/{id}/answers/{questionId}', [AssessmentApiController::class, 'saveAnswer']);
-        Route::post('/attempts/{id}/submit', [AssessmentApiController::class, 'submit']);
-        Route::get('/attempts/{id}/result', [AssessmentApiController::class, 'result']);
-        Route::get('/me/revision-plan', [AssessmentApiController::class, 'revisionPlan']);
-        Route::post('/me/revision-plan/tasks/{id}/complete', [AssessmentApiController::class, 'completeRevisionTask']);
-
-        // 8. Devoirs Élèves (Phase 8)
-        Route::prefix('student')->group(function () {
-            Route::get('/assignments', [StudentAssignmentApiController::class, 'index']);
-            Route::post('/assignments/{id}/submit', [StudentAssignmentApiController::class, 'submit']);
-        });
-
-        // 9. Espace Enseignants & Notations (Phase 8)
-        Route::prefix('teacher')->group(function () {
-            Route::get('/classes', [TeacherApiController::class, 'classes']);
-            Route::get('/assignments', [TeacherApiController::class, 'assignments']);
-            Route::post('/assignments', [TeacherApiController::class, 'createAssignment']);
-            Route::get('/assignments/{id}/submissions', [TeacherApiController::class, 'submissions']);
-            Route::post('/submissions/{id}/grade', [TeacherApiController::class, 'gradeSubmission']);
-        });
-
-        // 10. Espace Parents & Supervision (Phase 9)
-        Route::prefix('parent')->group(function () {
-            Route::get('/children', [ParentApiController::class, 'children']);
-            Route::post('/link', [ParentApiController::class, 'linkChild']);
-            Route::get('/children/{id}/report', [ParentApiController::class, 'report']);
-        });
-
-        // Liaison côté élève (génération du code parent)
-        Route::post('/student/link-code', [ParentApiController::class, 'generateStudentCode']);
-    });
-
-    // 11. Administration éditoriale et validation des référentiels
-    Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->prefix('admin')->group(function () {
-        Route::post('/imports', [AdminResourceController::class, 'createImport']);
-        Route::post('/resources/{id}/submit-review', [AdminResourceController::class, 'submitReview']);
-        Route::post('/resources/{id}/review', [AdminResourceController::class, 'review']);
-        Route::post('/resources/{id}/publish', [AdminResourceController::class, 'publish']);
-        Route::get('/content-versions/{id}/diff', [AdminResourceController::class, 'diff']);
+Route::prefix('v1')->group(function () {
+    Route::get('/health', function () {
+        return response()->json([
+            'status' => 'healthy',
+            'platform' => 'MONKAYIER',
+            'timestamp' => now()->toIso8601String(),
+        ]);
     });
 });
