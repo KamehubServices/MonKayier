@@ -774,6 +774,7 @@ html, body {
 }
 .pill-alert { background: #FEF3C7; color: #B45309; }
 .pill-ok { background: #ECFDF5; color: #059669; }
+.pill-neutral { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; }
 
 .cs-review-link {
     font-size: 10.5px;
@@ -1336,8 +1337,8 @@ html, body {
                             <div class="cs-item-fill" style="width: {{ $sb['mastery'] }}%; background: {{ $sb['color'] }};"></div>
                         </div>
                         <div class="cs-item-bottom">
-                            <span class="cs-status-pill {{ $sb['mastery'] < 65 ? 'pill-alert' : 'pill-ok' }}">
-                                {{ $sb['mastery'] < 65 ? 'Points à consolider' : 'Acquis satisfaisant' }}
+                            <span class="cs-status-pill {{ $sb['mastery'] == 0 ? 'pill-neutral' : ($sb['mastery'] < 65 ? 'pill-alert' : 'pill-ok') }}">
+                                {{ $sb['mastery'] == 0 ? 'À débuter' : ($sb['mastery'] < 65 ? 'Points à consolider' : 'Acquis satisfaisant') }}
                             </span>
                             <a href="{{ route('student.chat', ['subject' => $sb['id']]) }}" class="cs-review-link">
                                 Réviser →
@@ -1540,9 +1541,29 @@ function centerOnActiveNode() {
     }
 }
 
+function showParcoursToast(msg) {
+    let toast = document.getElementById('mkParcoursToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'mkParcoursToast';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0E1022;color:#F8FAFC;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);z-index:99999;transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.1);max-width:90%;';
+        toast.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span id="mkParcoursToastText"></span>`;
+        document.body.appendChild(toast);
+    }
+    const textEl = document.getElementById('mkParcoursToastText');
+    if (textEl) textEl.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    if (window._mkToastTimer) clearTimeout(window._mkToastTimer);
+    window._mkToastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(10px)';
+    }, 3500);
+}
+
 function handleNodeClick(status, subjectId, resourceId, title, step) {
     if (status === 'locked') {
-        alert("Ce jalon se débloquera dès que tu auras validé le jalon actif actuel : " + title);
+        showParcoursToast("Ce jalon se débloquera dès que tu auras validé le jalon précédent.");
         return;
     }
     let url = '/student/chat?subject=' + encodeURIComponent(subjectId);
@@ -1611,11 +1632,7 @@ function handleNodeClick(status, subjectId, resourceId, title, step) {
         if (status === 'redoublant') {
             const subTitleEl = document.querySelector('.cpm-subtitle');
             if (subTitleEl) {
-                subTitleEl.innerText = "Profil Redoublant activé : vos acquis de l'an dernier sont conservés, le parcours priorise les exercices de consolidation avancée et la méthode pour viser la mention.";
-            }
-            const stepDoneText = document.querySelector('.step-done .cpm-si-text');
-            if (stepDoneText) {
-                stepDoneText.innerHTML = "<strong>4 Jalons Déjà Traités (Acquis Préalables)</strong><span>Cours fondamentaux acquis · Focus immédiat sur les exercices types BAC</span>";
+                subTitleEl.innerText = "Profil Redoublant activé : vos lacunes ciblées sont prioritaires dès l'étape 01 pour viser la mention.";
             }
         }
 
@@ -1725,15 +1742,15 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="cpm-step-item step-done">
                 <div class="cpm-si-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                 <div class="cpm-si-text">
-                    <strong>{{ $completedNodesCount ?? 0 }} {{ ($completedNodesCount ?? 0) > 1 ? 'Jalons Fondamentaux Validés' : 'Jalon Fondamental Validé' }}</strong>
-                    <span>{{ ($completedNodesCount ?? 0) > 0 ? 'Acquis validés par votre diagnostic initial' : 'Départ depuis les fondations pour consolider toutes les bases' }}</span>
+                    <strong>{{ $completedNodesCount ?? 0 }} {{ ($completedNodesCount ?? 0) > 1 ? 'Jalons Validés' : 'Jalon Validé' }}</strong>
+                    <span>{{ ($completedNodesCount ?? 0) > 0 ? 'Acquis validés au cours de votre apprentissage' : 'Nouveau parcours · Tout commence au jalon initial (Étape 01)' }}</span>
                 </div>
             </div>
             <div class="cpm-step-item step-current">
                 <div class="cpm-si-icon">{{ sprintf('%02d', $activeNode['step'] ?? 1) }}</div>
                 <div class="cpm-si-text">
                     <strong>Étape Active Actuelle (Priorité 1)</strong>
-                    <span>{{ $activeNode['title'] ?? 'Chapitre actif' }} · Prêt à démarrer</span>
+                    <span>{{ $activeNode['title'] ?? 'Chapitre initial' }} ({{ $activeNode['subject'] ?? 'Général' }}) · Prêt à démarrer</span>
                 </div>
             </div>
             <div class="cpm-step-item step-locked">

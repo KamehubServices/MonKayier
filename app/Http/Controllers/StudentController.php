@@ -2931,51 +2931,43 @@ class StudentController extends Controller
         $activeStepNum = $curriculumEngine['active_step'];
         $calibData = $curriculumEngine['calibration'];
 
-        // 2. Matières officielles selon la série avec coefficients et maîtrise dynamique issue de la BDD
+        // 2. Matières officielles selon la série avec progression réelle d'apprentissage (démarre à 0% et avance au fil des révisions)
         $rawCoeffs = \App\Services\PathEngine\AdaptivePathEngine::getOfficialCoeffs($student->class_name ?? 'Terminale D');
-        $compRows = DB::table('student_competencies')
-            ->join('curriculum_objectives', 'student_competencies.objective_id', '=', 'curriculum_objectives.id')
-            ->where('student_user_id', $student->id)
-            ->select('curriculum_objectives.code', 'student_competencies.mastery_score')
-            ->get();
 
-        $dbCompMap = [];
-        foreach ($compRows as $cr) {
-            $cleanCode = str_replace('COMP-', '', strtoupper($cr->code));
-            if ($cleanCode === 'PHYSIQUE') {
-                $cleanCode = 'PCT';
+        // Calcul du nombre de jalons complétés par matière sur la plateforme
+        $totalBySubject = [];
+        $completedBySubject = [];
+        foreach ($gameNodes as $gn) {
+            $sCode = $gn['subject_code'];
+            $totalBySubject[$sCode] = ($totalBySubject[$sCode] ?? 0) + 1;
+            if ($gn['status'] === 'completed') {
+                $completedBySubject[$sCode] = ($completedBySubject[$sCode] ?? 0) + 1;
             }
-            $dbCompMap[$cleanCode] = (int) round((float) $cr->mastery_score);
         }
-
-        $fallbackMastery = !empty($calibData['has_calibrated'])
-            ? max(0, min(100, (int) round(($calibData['combined_score'] / 20) * 100)))
-            : 0;
 
         $officialSubjects = [];
         foreach ($rawCoeffs as $code => $info) {
+            $tot = $totalBySubject[$code] ?? 1;
+            $done = $completedBySubject[$code] ?? 0;
+            $progPct = $tot > 0 ? (int) round(($done / $tot) * 100) : 0;
+
             $officialSubjects[] = [
                 'id' => $info['subject_id'],
                 'name' => $info['name'],
                 'short' => $info['name'],
                 'coeff' => "Coeff. {$info['coeff']} (Épreuve officielle)",
                 'coeff_num' => $info['coeff'],
-                'mastery' => $dbCompMap[$code] ?? $fallbackMastery,
+                'mastery' => $progPct,
                 'color' => $info['color'],
             ];
         }
 
-        // Calcul de la maîtrise globale pondérée par les coefficients
-        $totalCoeff = array_sum(array_column($officialSubjects, 'coeff_num'));
-        $weightedSum = 0;
-        foreach ($officialSubjects as $sb) {
-            $weightedSum += ($sb['mastery'] * $sb['coeff_num']);
-        }
-        $overallMasteryPercent = round($weightedSum / max(1, $totalCoeff));
+        // Calcul de la maîtrise globale du programme (démarre strictement à 0% pour un nouveau parcours)
+        $completedNodesCount = collect($gameNodes)->where('status', 'completed')->count();
+        $overallMasteryPercent = round(($completedNodesCount / max(1, count($gameNodes))) * 100);
+        $curriculumProgressPercent = $overallMasteryPercent;
 
         $activeNode = collect($gameNodes)->firstWhere('status', 'active') ?? $gameNodes[0];
-        $completedNodesCount = collect($gameNodes)->where('status', 'completed')->count();
-        $curriculumProgressPercent = round(($completedNodesCount / max(1, count($gameNodes))) * 100);
 
         return view('student.parcours', compact(
             'student',

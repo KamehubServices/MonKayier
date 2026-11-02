@@ -2534,11 +2534,31 @@ function submitTier1() {
     });
 }
 
+function showChatToast(msg, isError = false) {
+    let toast = document.getElementById('mkChatToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'mkChatToast';
+        toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#0E1022;color:#F8FAFC;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);z-index:99999;transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.1);max-width:90%;';
+        toast.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isError ? '#EF4444' : '#F59E0B'}" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><span id="mkChatToastText"></span>`;
+        document.body.appendChild(toast);
+    }
+    const textEl = document.getElementById('mkChatToastText');
+    if (textEl) textEl.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    if (window._mkChatToastTimer) clearTimeout(window._mkChatToastTimer);
+    window._mkChatToastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+    }, 3800);
+}
+
 // Soumission du Palier 2 (Application Méthodologique & Anti-Triche)
 function submitTier2() {
     const text = (document.getElementById('tier2StudentInput').value || '').trim();
     if (!text || text.length < 8) {
-        alert("Règle Anti-Triche : Tu dois obligatoirement formuler ta démarche ou ton calcul avant de déverrouiller la correction officielle.");
+        showChatToast("Règle Anti-Triche : Tu dois obligatoirement formuler ta démarche ou ton calcul avant de déverrouiller la correction officielle.", true);
         return;
     }
 
@@ -2587,7 +2607,7 @@ function submitTier2() {
             }
             setTimeout(renderKaTeX, 60);
         } else {
-            alert(data.error || "Erreur de validation");
+            showChatToast(data.error || "Erreur de validation", true);
             btn.innerText = 'Valider ma démarche & Déverrouiller';
         }
     })
@@ -2601,7 +2621,7 @@ function submitTier2() {
 function submitTier3() {
     const text = (document.getElementById('tier3StudentInput').value || '').trim();
     if (!text || text.length < 15) {
-        alert("Règle Anti-Triche : Détaille au moins deux étapes de ta démonstration pour déverrouiller la grille de correction officielle du BAC.");
+        showChatToast("Règle Anti-Triche : Détaille au moins deux étapes de ta démonstration pour déverrouiller la grille de correction officielle du BAC.", true);
         return;
     }
 
@@ -2640,7 +2660,7 @@ function submitTier3() {
             document.getElementById('tier3SolutionContent').innerHTML = data.unlocked_solution;
             setTimeout(renderKaTeX, 60);
         } else {
-            alert(data.error || "Erreur de validation");
+            showChatToast(data.error || "Erreur de validation", true);
             btn.innerText = 'Valider ma synthèse BAC & Débloquer la grille';
         }
     })
@@ -2835,7 +2855,7 @@ function toggleSpeechDictation() {
     const typingText = document.getElementById('typingIndicatorText');
 
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        alert("La reconnaissance vocale n'est pas supportée par ce navigateur. Tu peux taper directement ta question.");
+        showChatToast("La reconnaissance vocale n'est pas supportée par ce navigateur. Tu peux taper directement ta question.", false);
         return;
     }
 

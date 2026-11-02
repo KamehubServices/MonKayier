@@ -3370,9 +3370,16 @@ body.page-test-niveau .lay .w {
                                     <span class="tn-report-status">{{ $rc->ai_status === 'pending_analysis' ? 'Analyse IA programmée' : 'Vérifié' }}</span>
                                 </div>
                             </div>
-                            <button type="button" class="tn-delete-btn" onclick="deleteReportCard('{{ $rc->id }}')">
-                                Supprimer
-                            </button>
+                            <div class="tn-del-wrap" style="display:flex;align-items:center;">
+                                <button type="button" class="tn-delete-btn" id="delBtn-{{ $rc->id }}" onclick="askDeleteReportCard('{{ $rc->id }}')">
+                                    Supprimer
+                                </button>
+                                <div id="delConfirmBox-{{ $rc->id }}" style="display:none;align-items:center;gap:6px;">
+                                    <span style="font-size:11px;font-weight:800;color:#DC2626;">Supprimer ?</span>
+                                    <button type="button" onclick="executeDeleteReportCard('{{ $rc->id }}')" style="background:#DC2626;color:#FFFFFF;border:none;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;">Oui</button>
+                                    <button type="button" onclick="cancelDeleteReportCard('{{ $rc->id }}')" style="background:#E2E8F0;color:#0E1022;border:none;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;">Non</button>
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -3894,7 +3901,13 @@ function submitFullAssessment() {
             lastScoreResult = data;
             displayResults(data);
         } else {
-            alert(data.message || "Erreur lors de la validation du diagnostic.");
+            const errBanner = document.getElementById('tnGlobalErrorBanner');
+            if (errBanner) {
+                errBanner.innerText = data.message || "Erreur lors de la validation du diagnostic.";
+                errBanner.style.display = 'block';
+            } else {
+                console.warn(data.message || "Erreur lors de la validation du diagnostic.");
+            }
             if (validateBtn) {
                 validateBtn.disabled = false;
                 validateBtn.innerText = "Valider et continuer";
@@ -3903,7 +3916,13 @@ function submitFullAssessment() {
     })
     .catch(err => {
         console.error("Erreur lors de la soumission :", err);
-        alert("Une erreur est survenue lors de la validation de vos réponses. Veuillez vérifier votre connexion et réessayer.");
+        const errBanner = document.getElementById('tnGlobalErrorBanner');
+        if (errBanner) {
+            errBanner.innerText = "Une erreur est survenue lors de la validation de vos réponses. Veuillez vérifier votre connexion et réessayer.";
+            errBanner.style.display = 'block';
+        } else {
+            console.warn("Erreur réseau lors de la validation.");
+        }
         if (validateBtn) {
             validateBtn.disabled = false;
             validateBtn.innerText = "Valider et continuer";
@@ -4127,9 +4146,16 @@ function renderNewReportCardItem(card, totalCards) {
                 <span class="tn-report-status">${statusText}</span>
             </div>
         </div>
-        <button type="button" class="tn-delete-btn" onclick="deleteReportCard('${card.id}')">
-            Supprimer
-        </button>
+        <div class="tn-del-wrap" style="display:flex;align-items:center;">
+            <button type="button" class="tn-delete-btn" id="delBtn-${card.id}" onclick="askDeleteReportCard('${card.id}')">
+                Supprimer
+            </button>
+            <div id="delConfirmBox-${card.id}" style="display:none;align-items:center;gap:6px;">
+                <span style="font-size:11px;font-weight:800;color:#DC2626;">Supprimer ?</span>
+                <button type="button" onclick="executeDeleteReportCard('${card.id}')" style="background:#DC2626;color:#FFFFFF;border:none;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer;">Oui</button>
+                <button type="button" onclick="cancelDeleteReportCard('${card.id}')" style="background:#E2E8F0;color:#0E1022;border:none;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;">Non</button>
+            </div>
+        </div>
     `;
 
     listContainer.prepend(item);
@@ -4190,10 +4216,22 @@ function handleUploadReportCard(e) {
     });
 }
 
-// Suppression d'un bulletin
-function deleteReportCard(id) {
-    if (!confirm("Voulez-vous supprimer ce bulletin scolaire ?")) return;
+// Gestion de la suppression sans alerte bloquante système
+function askDeleteReportCard(id) {
+    const btn = document.getElementById(`delBtn-${id}`);
+    const box = document.getElementById(`delConfirmBox-${id}`);
+    if (btn) btn.style.display = 'none';
+    if (box) box.style.display = 'flex';
+}
 
+function cancelDeleteReportCard(id) {
+    const btn = document.getElementById(`delBtn-${id}`);
+    const box = document.getElementById(`delConfirmBox-${id}`);
+    if (btn) btn.style.display = 'inline-block';
+    if (box) box.style.display = 'none';
+}
+
+function executeDeleteReportCard(id) {
     fetch(`/student/test-niveau/report-card/${id}`, {
         method: "DELETE",
         headers: {

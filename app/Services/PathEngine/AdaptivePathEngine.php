@@ -453,23 +453,9 @@ class AdaptivePathEngine
             ],
         ];
 
-        // 1. Échelon de départ calibré par la note globale QCM + Bulletins (0 si non calibré ou score < 7)
+        // 1. Échelon de départ : à la création du parcours, tout démarre à l'Étape 01 (0 validé).
+        // Le diagnostic oriente la priorité des chapitres mais ne valide pas artificiellement d'étapes sans travail de l'élève.
         $baseCompleted = 0;
-        if (!empty($calib['has_calibrated'])) {
-            if ($score >= 16) {
-                $baseCompleted = 6;
-            } elseif ($score >= 14) {
-                $baseCompleted = 4;
-            } elseif ($score >= 12) {
-                $baseCompleted = 3;
-            } elseif ($score >= 10) {
-                $baseCompleted = 2;
-            } elseif ($score >= 7) {
-                $baseCompleted = 1;
-            } else {
-                $baseCompleted = 0;
-            }
-        }
 
         // 1.b Ordonnancement dynamique des jalons selon les lacunes détectées au Test de niveau
         $compRows = DB::table('student_competencies')
@@ -547,10 +533,8 @@ class AdaptivePathEngine
             $timeSpentSec = $studyDurationByResource[$resId] ?? 0;
             $hasTaskCompleted = in_array($resId, $completedResourceIds);
 
-            // Le jalon est considéré comme validé si :
-            // a) Il faisait partie du socle initial validé par la note diagnostique
-            // b) OU l'élève a complété les exercices de ce cours dans la Révision IA
-            $isCompleted = ($step <= $baseCompleted) || $hasTaskCompleted;
+            // Le jalon est considéré comme validé uniquement lorsque l'élève a validé ce cours sur MonKayier
+            $isCompleted = $hasTaskCompleted;
 
             if ($isCompleted) {
                 $status = 'completed';
