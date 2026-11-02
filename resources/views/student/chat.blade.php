@@ -1832,7 +1832,7 @@ body.is-focus-mode .chat-input-bar {
                             {{ $chapterPedagogy['tier2']['title'] ?? 'Palier 2 : Exercice d\'Application Guidé' }}
                         </h3>
                         <div style="font-size: 13px; color: var(--immersion-subtext);">
-                            Rédige ta réponse. Le tuteur IA évalue ta rigueur selon les critères du barème national MEPST.
+                            Résous l'exercice sur ton cahier. Le Tuteur IA analyse ta copie manuscrite selon le barème officiel du BAC.
                         </div>
                     </div>
 
@@ -1840,70 +1840,89 @@ body.is-focus-mode .chat-input-bar {
                         {!! $chapterPedagogy['tier2']['statement'] ?? $chapterPedagogy['tier2']['prompt'] ?? 'Résous l\'exercice ci-dessous.' !!}
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 13px; font-weight: 800; color: var(--immersion-text); margin-bottom: 8px;">
-                            Ta démarche et tes calculs :
-                        </label>
+                    {{-- ZONE DE DÉPÔT / PHOTO DE LA COPIE MANUSCRITE PALIER 2 --}}
+                    <div style="margin-bottom: 22px;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                            <label style="font-size: 13.5px; font-weight: 850; color: var(--immersion-text);">
+                                Ta Démarche Manuscrite (Photo ou Scan de ton cahier) :
+                            </label>
+                            <span style="font-size: 11.5px; font-weight: 700; color: #166534; background: #DCFCE7; padding: 2px 8px; border-radius: 6px;">Recommandé · Conditions d'Examen</span>
+                        </div>
 
-                        {{-- Clavier Virtuel Scientifique Palier 2 --}}
-                        <div class="sc-kbd-toolbar">
-                            <div class="sc-kbd-header">
-                                <div class="sc-kbd-tabs">
-                                    <button type="button" class="sc-kbd-tab active" onclick="switchKbdTab(this, 'maths')">Mathématiques</button>
-                                    <button type="button" class="sc-kbd-tab" onclick="switchKbdTab(this, 'pct')">Physique-Chimie</button>
-                                </div>
-                                <span class="sc-kbd-hint">Clique pour insérer le symbole</span>
+                        <div style="background: rgba(22, 101, 52, 0.04); border: 1.5px solid rgba(22, 101, 52, 0.16); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: 12.5px; color: var(--immersion-text); line-height: 1.55;">
+                            <b>Méthode de travail :</b> Rédige tes calculs et ta démonstration sur ton cahier ou une feuille de brouillon avec ton stylo. Prends une photo nette de ta résolution pour la faire corriger par l'IA.
+                        </div>
+
+                        {{-- Input fichier invisible avec capture caméra native --}}
+                        <input type="file" id="tier2CopyInput" accept="image/*,application/pdf" capture="environment" style="display: none;" onchange="handleCopyFileSelected(this, 2)">
+
+                        {{-- Zone de dépôt intuitive --}}
+                        <div id="tier2Dropzone" class="mk-copy-dropzone" onclick="document.getElementById('tier2CopyInput').click()">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: #0E1022; color: #D4F25C; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
                             </div>
-                            <div class="sc-kbd-keys sc-kbd-maths">
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '√')">√x</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '²')">x²</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '^')">xⁿ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '/')">a/b</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'lim(x→+∞) ')">lim</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'ln(')">ln(x)</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'e^')">eˣ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '∫')">∫</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '⇒')">⇒</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '⇔')">⇔</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'vec(')">vec(u)</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'π')">π</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'Δ')">Δ</button>
+                            <div style="font-size: 14.5px; font-weight: 850; color: var(--immersion-text); margin-bottom: 4px;">
+                                Prendre en photo ou importer ma copie traitée
                             </div>
-                            <div class="sc-kbd-keys sc-kbd-pct" style="display:none;">
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '[H₃O⁺]')">[H₃O⁺]</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '[OH⁻]')">[OH⁻]</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'pH')">pH</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'Ke')">Ke</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'pKa')">pKa</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '⇄')">⇄</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', '→')">→</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'g = 9.8 m/s²')">g</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'λ')">λ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'Ω')">Ω</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier2StudentInput', 'mol/L')">mol/L</button>
+                            <div style="font-size: 12px; color: var(--immersion-subtext);">
+                                Clique ici pour ouvrir l'appareil photo du téléphone ou déposer un fichier (JPG, PNG, PDF)
                             </div>
                         </div>
 
-                        <textarea id="tier2StudentInput" rows="6" 
-                                  style="width: 100%; border: 1.5px solid var(--immersion-border); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 13.5px; box-sizing: border-box; outline: none; background: var(--immersion-pane); color: var(--immersion-text);" 
-                                  placeholder="Écris ta démarche détaillée ici…"></textarea>
+                        {{-- Aperçu de la copie sélectionnée --}}
+                        <div id="tier2CopyPreviewBox" style="display: none; margin-top: 14px; background: var(--immersion-pane); border: 1.5px solid var(--immersion-border); border-radius: 12px; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <img id="tier2CopyPreviewImg" src="" alt="Aperçu copie" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1.5px solid #CBD5E1; display: none;">
+                                <div id="tier2PdfIcon" style="width: 52px; height: 52px; border-radius: 8px; background: #DC2626; color: #fff; font-weight: 900; font-size: 12px; display: none; align-items: center; justify-content: center;">
+                                    PDF
+                                </div>
+                                <div>
+                                    <div id="tier2CopyFileName" style="font-size: 13.5px; font-weight: 800; color: var(--immersion-text);">copie.jpg</div>
+                                    <div id="tier2CopyFileSize" style="font-size: 11.5px; color: #166534; font-weight: 700;">Prête pour analyse IA</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('tier2CopyInput').click()" 
+                                    style="background: #F1F5F9; color: #0E1022; border: 1.5px solid #CBD5E1; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                                Changer la photo
+                            </button>
+                        </div>
+
+                        {{-- Option repliable : Saisie écrite au clavier si besoin --}}
+                        <details style="margin-top: 14px; font-size: 12.5px; color: var(--immersion-subtext);">
+                            <summary style="cursor: pointer; font-weight: 700; color: #475569;">
+                                Ou saisir ta démarche par écrit au clavier (optionnel)
+                            </summary>
+                            <div style="margin-top: 10px;">
+                                <textarea id="tier2StudentInput" rows="4" 
+                                          style="width: 100%; border: 1.5px solid var(--immersion-border); border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 13px; box-sizing: border-box; outline: none; background: var(--immersion-pane); color: var(--immersion-text);" 
+                                          placeholder="Tu peux également taper ou préciser ta démarche ici…"></textarea>
+                            </div>
+                        </details>
                     </div>
 
-                    {{-- Feedback IA Palier 2 --}}
-                    <div id="tier2FeedbackBox" style="display: none; margin-bottom: 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <b style="font-size: 14.5px; color: #166534;">Évaluation Pédagogique du Tuteur IA</b>
-                            <span id="tier2ScoreBadge" style="font-size: 12px; font-weight: 850; background: #DCFCE7; color: #166534; padding: 3px 9px; border-radius: 6px;"></span>
+                    {{-- Feedback & Rapport d'Évaluation IA Palier 2 --}}
+                    <div id="tier2FeedbackBox" style="display: none; margin-bottom: 20px;">
+                        <div id="tier2FeedbackText"></div>
+                    </div>
+
+                    {{-- Solution et Barème déverrouillés Palier 2 --}}
+                    <div id="tier2UnlockedBox" class="solution-unlocked-box" style="display: none; margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <b style="font-size: 15px; color: #166534;">Corrigé Modèle & Grille de Notation Déverrouillés</b>
+                            <span id="tier2BaremeTag" style="font-size: 11.5px; font-weight: 850; background: #DCFCE7; color: #166534; padding: 3px 8px; border-radius: 6px;"></span>
                         </div>
-                        <div id="tier2FeedbackText" style="line-height: 1.55; font-size: 13.5px; color: var(--immersion-text);"></div>
+                        <div id="tier2SolutionContent"></div>
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
                         <button type="button" id="btnSubmitTier2" onclick="submitTier2()" 
-                                style="background: #0E1022; color: #FFFFFF; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: none !important;">
-                            Soumettre au Tuteur IA
+                                style="background: #0E1022; color: #D4F25C; border: none; border-radius: 8px; padding: 12px 22px; font-size: 13px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
+                            Soumettre ma copie au Tuteur IA
                         </button>
-                        <button type="button" id="btnNextTier3" onclick="navigateToTier(3)" style="display: none; background: #D4F25C; color: #0E1022; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
+                        <button type="button" id="btnNextTier3" onclick="navigateToTier(3)" style="display: none; background: #D4F25C; color: #0E1022; border: none; border-radius: 8px; padding: 12px 22px; font-size: 13px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
                             Passer au Palier 3 (Synthèse BAC) →
                         </button>
                     </div>
@@ -2012,6 +2031,11 @@ body.is-focus-mode .chat-input-bar {
                             <input type="text" id="tier3StudentNotes" placeholder="Une remarque ou question sur ta rédaction ? (facultatif)" 
                                    style="width: 100%; border: 1.5px solid var(--immersion-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; outline: none; background: var(--immersion-pane); color: var(--immersion-text); box-sizing: border-box;">
                         </div>
+                    </div>
+
+                    {{-- Feedback & Rapport d'Évaluation IA Palier 3 --}}
+                    <div id="tier3FeedbackBox" style="display: none; margin-bottom: 20px;">
+                        <div id="tier3FeedbackText"></div>
                     </div>
 
                     {{-- Zone de Corrigé Intégral Déverrouillé --}}
@@ -2658,6 +2682,8 @@ let completedTier1 = false;
 let completedTier2 = false;
 let currentActiveTier = 1;
 let selectedCopyFile = null;
+let selectedCopyFileTier2 = null;
+let selectedCopyFileTier3 = null;
 
 // Navigation séquentielle verrouillée entre les 3 Paliers
 function navigateToTier(tier) {
@@ -2728,23 +2754,29 @@ function startQcmCountdown() {
     }, 1000);
 }
 
-// Gestion de la photo / scan de copie pour le Palier 3
-function handleCopyFileSelected(input) {
+// Gestion de la photo / scan de copie pour le Palier 2 et le Palier 3
+function handleCopyFileSelected(input, tier = 3) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
-    selectedCopyFile = file;
+    if (tier === 2) {
+        selectedCopyFileTier2 = file;
+    } else {
+        selectedCopyFileTier3 = file;
+        selectedCopyFile = file;
+    }
 
-    const previewBox = document.getElementById('tier3CopyPreviewBox');
-    const previewImg = document.getElementById('tier3CopyPreviewImg');
-    const pdfIcon = document.getElementById('tier3PdfIcon');
-    const nameEl = document.getElementById('tier3CopyFileName');
-    const sizeEl = document.getElementById('tier3CopyFileSize');
+    const t = (tier === 2) ? 'tier2' : 'tier3';
+    const previewBox = document.getElementById(t + 'CopyPreviewBox');
+    const previewImg = document.getElementById(t + 'CopyPreviewImg');
+    const pdfIcon = document.getElementById(t + 'PdfIcon');
+    const nameEl = document.getElementById(t + 'CopyFileName');
+    const sizeEl = document.getElementById(t + 'CopyFileSize');
 
     if (nameEl) nameEl.textContent = file.name;
     const sizeStr = file.size > 1048576 
         ? (file.size / 1048576).toFixed(1) + ' Mo' 
         : Math.round(file.size / 1024) + ' Ko';
-    if (sizeEl) sizeEl.textContent = sizeStr + ' · Prête pour évaluation';
+    if (sizeEl) sizeEl.textContent = sizeStr + ' · Prête pour analyse IA';
 
     if (previewBox) previewBox.style.display = 'flex';
 
@@ -2892,35 +2924,40 @@ function showChatToast(msg, isError = false) {
 
 // Soumission du Palier 2 (Application Méthodologique & Déverrouillage Palier 3)
 function submitTier2() {
-    const text = (document.getElementById('tier2StudentInput').value || '').trim();
-    if (!text || text.length < 8) {
-        showChatToast("Règle Anti-Triche : Tu dois obligatoirement formuler ta démarche ou ton calcul avant de déverrouiller la correction officielle.", true);
+    const text = (document.getElementById('tier2StudentInput') ? document.getElementById('tier2StudentInput').value : '').trim();
+    if (!selectedCopyFileTier2 && (!text || text.length < 8)) {
+        showChatToast("Tu dois d'abord prendre en photo ta copie d'exercice ou saisir ta démarche.", true);
         return;
     }
 
     const btn = document.getElementById('btnSubmitTier2');
     btn.disabled = true;
-    btn.innerText = 'Vérification IA de ta démarche…';
+    btn.innerText = 'Analyse de ta copie manuscrite par le Tuteur IA…';
+
+    const formData = new FormData();
+    formData.append('course_id', currentCourseId);
+    formData.append('tier', 2);
+    if (selectedCopyFileTier2) {
+        formData.append('copy_file', selectedCopyFileTier2);
+    }
+    if (text) {
+        formData.append('student_response', text);
+    }
 
     fetch('{{ route("student.chat.evaluate") }}', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            course_id: currentCourseId,
-            tier: 2,
-            student_response: text
-        })
+        body: formData
     })
     .then(res => res.json())
     .then(data => {
         btn.disabled = false;
         if (data.success) {
             completedTier2 = true;
-            btn.innerText = 'Démarche Validée ✓';
+            btn.innerText = 'Copie Validée ✓';
             btn.style.background = '#059669';
             btn.style.color = '#fff';
 
@@ -2957,29 +2994,36 @@ function submitTier2() {
             const barEl = document.getElementById('tier2BaremeTag');
             if (barEl) barEl.innerText = data.bareme;
 
-            if (data.feedback) {
-                const fbBox = document.getElementById('tier2FeedbackBox');
-                const fbText = document.getElementById('tier2FeedbackText');
-                if (fbBox && fbText) {
+            const fbBox = document.getElementById('tier2FeedbackBox');
+            const fbText = document.getElementById('tier2FeedbackText');
+            if (fbBox && fbText) {
+                if (data.feedback_html) {
+                    fbText.innerHTML = data.feedback_html;
+                } else if (data.feedback) {
                     fbText.innerHTML = window.mkFormatAiHtml ? window.mkFormatAiHtml(data.feedback) : data.feedback;
-                    fbBox.style.display = 'block';
                 }
+                fbBox.style.display = 'block';
             }
             setTimeout(renderKaTeX, 60);
         } else {
             showChatToast(data.error || "Erreur de validation", true);
-            btn.innerText = 'Soumettre ma démarche au Tuteur IA';
+            btn.innerText = 'Soumettre ma copie au Tuteur IA';
         }
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerText = 'Soumettre ma démarche au Tuteur IA';
+        showChatToast("Erreur lors de l'analyse de ta copie.", true);
+        btn.innerText = 'Soumettre ma copie au Tuteur IA';
     });
 }
 
 // Soumission du Palier 3 (Copie Manuscrite Photographiée / Scannée)
 function submitTier3() {
-    if (!selectedCopyFile) {
+    const copyFile = selectedCopyFileTier3 || selectedCopyFile;
+    const notes = document.getElementById('tier3StudentNotes');
+    const noteText = notes ? notes.value.trim() : '';
+
+    if (!copyFile && (!noteText || noteText.length < 8)) {
         showChatToast("Tu dois d'abord prendre en photo ou déposer ta copie manuscrite traitée sur cahier.", true);
         return;
     }
@@ -2991,10 +3035,11 @@ function submitTier3() {
     const formData = new FormData();
     formData.append('course_id', currentCourseId);
     formData.append('tier', 3);
-    formData.append('copy_file', selectedCopyFile);
-    const notes = document.getElementById('tier3StudentNotes');
-    if (notes && notes.value.trim()) {
-        formData.append('student_response', notes.value.trim());
+    if (copyFile) {
+        formData.append('copy_file', copyFile);
+    }
+    if (noteText) {
+        formData.append('student_response', noteText);
     }
 
     fetch('{{ route("student.chat.evaluate") }}', {
@@ -3022,6 +3067,17 @@ function submitTier3() {
 
             if (data.updated_mastery) {
                 updateDynamicMasteryUI(data.subject_id, data.updated_mastery);
+            }
+
+            const fbBox = document.getElementById('tier3FeedbackBox');
+            const fbText = document.getElementById('tier3FeedbackText');
+            if (fbBox && fbText) {
+                if (data.feedback_html) {
+                    fbText.innerHTML = data.feedback_html;
+                } else if (data.feedback) {
+                    fbText.innerHTML = window.mkFormatAiHtml ? window.mkFormatAiHtml(data.feedback) : data.feedback;
+                }
+                fbBox.style.display = 'block';
             }
 
             const unlBox = document.getElementById('tier3UnlockedBox');

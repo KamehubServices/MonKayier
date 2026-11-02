@@ -1433,97 +1433,85 @@ class StudentController extends Controller
                     ? 'Score parfait (3/3). Tu maîtrises les définitions fondamentales du cours.'
                     : 'Bon réflexe. Tes acquis sont enregistrés et ta progression a été actualisée.',
             ]);
-        } elseif ($tier === 2) {
-            // Palier 2 : Application Méthodologique (Anti-Triche Déverrouillé)
-            if (empty($studentResponse) || mb_strlen($studentResponse) < 8) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Tu dois proposer ta démarche ou ton calcul avant de pouvoir déverrouiller la correction officielle (Règle Anti-Triche).',
-                ], 422);
-            }
-
-            $xpAwarded = 50;
-
-            $aiService = app(\App\Services\Ai\OpenSourceAiService::class);
-            $aiEval = $aiService->evaluateStepDemonstration(
-                $course->clean_title ?? ($course->title ?? 'Cours'),
-                $course->subject_code ?? 'MATHS',
-                $pedagogy['tier2']['prompt'] ?? 'Exercice d\'application',
-                $studentResponse,
-                2
-            );
-
-            // Enregistrement de la progression dynamique
-            $updatedMastery = $this->recordTierProgress($student->id, $course, 2, 100);
-            $milestoneSync = $this->syncMilestoneProgress($student->id, $courseId, 2, 100);
-
-            return response()->json([
-                'success' => true,
-                'tier' => 2,
-                'xp_awarded' => $xpAwarded,
-                'updated_mastery' => $updatedMastery,
-                'milestone_sync' => $milestoneSync,
-                'subject_id' => $course->subject_id ?? null,
-                'feedback' => $aiEval['feedback'] ?? 'Démarche analysée avec succès. La correction officielle et le barème détaillé sont déverrouillés.',
-                'unlocked_solution' => $pedagogy['tier2']['solution'] ?? 'Solution officielle',
-                'bareme' => $pedagogy['tier2']['bareme'] ?? 'Barème officiel',
-            ]);
-        } else {
-            // Palier 3 : Problème de Synthèse BAC National (Copie Manuscrite Scannée ou Démonstration)
+        } elseif ($tier === 2 || $tier === 3) {
+            // Palier 2 (Application Méthode) ou Palier 3 (Synthèse BAC) : Évaluation par Copie Manuscrite (Photo/Scan) ou Démarche
             $hasCopy = $request->hasFile('copy_file') || !empty($request->input('copy_image'));
             $copyPath = null;
+            $localDiskPath = null;
 
             if ($request->hasFile('copy_file')) {
                 $file = $request->file('copy_file');
-                $filename = 'copy_' . $student->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $filename = 'copy_tier' . $tier . '_' . $student->id . '_' . time() . '.' . $file->getClientOriginalExtension();
                 $copyPath = $file->storeAs('student_copies', $filename, 'public');
+                $localDiskPath = storage_path('app/public/' . $copyPath);
             } elseif (!empty($request->input('copy_image'))) {
                 $imgData = $request->input('copy_image');
                 if (preg_match('/^data:image\/(\w+);base64,/', $imgData, $type)) {
                     $imgData = substr($imgData, strpos($imgData, ',') + 1);
                     $imgData = base64_decode($imgData);
                     $ext = strtolower($type[1]);
-                    $filename = 'copy_' . $student->id . '_' . time() . '.' . $ext;
+                    $filename = 'copy_tier' . $tier . '_' . $student->id . '_' . time() . '.' . $ext;
                     \Illuminate\Support\Facades\Storage::disk('public')->put('student_copies/' . $filename, $imgData);
                     $copyPath = 'student_copies/' . $filename;
+                    $localDiskPath = storage_path('app/public/' . $copyPath);
                 }
             }
 
             if (!$hasCopy && (empty($studentResponse) || mb_strlen($studentResponse) < 8)) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Tu dois déposer une photo de ta copie rédigée sur cahier (ou détailler ta démarche) pour déverrouiller la correction officielle du BAC.',
+                    'error' => 'Tu dois déposer une photo de ta copie rédigée sur cahier (ou détailler ta démarche) pour déverrouiller la correction officielle.',
                 ], 422);
             }
 
-            $xpAwarded = 100;
-
+            $xpAwarded = $tier === 2 ? 50 : 100;
+            $tierKey = 'tier' . $tier;
             $aiService = app(\App\Services\Ai\OpenSourceAiService::class);
-            $aiEval = $hasCopy ? [
-                'feedback' => 'Copie manuscrite réceptionnée et analysée selon les critères du barème national MEPST. Félicitations pour ta rédaction sur papier ! Consulte la grille officielle et le corrigé ci-dessous.'
-            ] : $aiService->evaluateStepDemonstration(
-                $course->clean_title ?? ($course->title ?? 'Cours'),
-                $course->subject_code ?? 'MATHS',
-                $pedagogy['tier3']['prompt'] ?? 'Problème de synthèse BAC',
-                $studentResponse,
-                3
-            );
 
-            // Enregistrement de la progression dynamique
-            $updatedMastery = $this->recordTierProgress($student->id, $course, 3, 100);
-            $milestoneSync = $this->syncMilestoneProgress($student->id, $courseId, 3, 100);
+            if ($hasCopy && $localDiskPath && file_exists($localDiskPath)) {
+                $aiEval = $aiService->evaluateHandwrittenCopy(
+                    $localDiskPath,
+                    $pedagogy[$tierKey]['prompt'] ?? ($pedagogy[$tierKey]['statement'] ?? 'Exercice'),
+                    $pedagogy[$tierKey]['solution'] ?? 'Solution officielle',
+                    $pedagogy[$tierKey]['bareme'] ?? 'Barème officiel',
+                    $course->clean_title ?? ($course->title ?? 'Cours'),
+                    $course->subject_code ?? 'MATHS',
+                    $student->level_name ?? 'Terminale (BAC 2)',
+                    $studentResponse
+                );
+            } else {
+                $aiEval = $aiService->evaluateStepDemonstration(
+                    $course->clean_title ?? ($course->title ?? 'Cours'),
+                    $course->subject_code ?? 'MATHS',
+                    $pedagogy[$tierKey]['prompt'] ?? ($pedagogy[$tierKey]['statement'] ?? 'Exercice'),
+                    $studentResponse,
+                    $tier
+                );
+            }
+
+            $scorePercent = (int) ($aiEval['score_percent'] ?? 85);
+            $updatedMastery = $this->recordTierProgress($student->id, $course, $tier, $scorePercent);
+            $milestoneSync = $this->syncMilestoneProgress($student->id, $courseId, $tier, $scorePercent);
 
             return response()->json([
                 'success' => true,
-                'tier' => 3,
+                'tier' => $tier,
                 'xp_awarded' => $xpAwarded,
+                'score' => $aiEval['score'] ?? null,
+                'score_percent' => $scorePercent,
+                'appreciation' => $aiEval['appreciation'] ?? null,
+                'strengths' => $aiEval['strengths'] ?? [],
+                'improvements' => $aiEval['improvements'] ?? [],
+                'bac_advice' => $aiEval['bac_advice'] ?? null,
+                'transcription' => $aiEval['transcription'] ?? null,
+                'feedback' => $aiEval['feedback'] ?? null,
+                'feedback_html' => $aiEval['formatted_html'] ?? ($aiEval['feedback'] ?? null),
+                'copy_url' => $copyPath ? asset('storage/' . $copyPath) : null,
                 'updated_mastery' => $updatedMastery,
                 'milestone_sync' => $milestoneSync,
                 'subject_id' => $course->subject_id ?? null,
-                'copy_url' => $copyPath ? asset('storage/' . $copyPath) : null,
-                'feedback' => $aiEval['feedback'] ?? 'Félicitations. Ta démonstration a été analysée selon la grille MEPST et le corrigé modèle est déverrouillé.',
-                'unlocked_solution' => $pedagogy['tier3']['solution'] ?? 'Corrigé officiel BAC',
-                'bareme' => $pedagogy['tier3']['bareme'] ?? 'Grille officielle MEPST',
+                'unlocked_solution' => $pedagogy[$tierKey]['solution'] ?? 'Solution officielle',
+                'bareme' => $pedagogy[$tierKey]['bareme'] ?? 'Barème officiel',
             ]);
         }
     }
