@@ -296,13 +296,13 @@ class OfficialCourseService
             'theorems' => [
                 [
                     'title' => 'Théorème des Valeurs Intermédiaires (TVI)',
-                    'latex' => 'f \text{ continue sur } [a, b] \implies \forall k \in [f(a), f(b)], \exists c \in [a, b] \text{ tel que } f(c) = k',
+                    'latex' => 'f \text{ continue sur } [a, b] \implies \forall k \in [f(a), f(b)], \; \exists c \in [a, b], \; f(c) = k',
                     'conditions' => '1. $f$ doit être continue sur le segment $[a, b]$. 2. $k$ doit être compris entre $f(a)$ et $f(b)$.',
                     'comment' => 'Garantit l\'existence d\'au moins une solution $c$.',
                 ],
                 [
                     'title' => 'Corollaire du TVI (Théorème de Bijection)',
-                    'latex' => 'f \text{ continue et STRICTEMENT MONOTONE sur } [a, b] \implies \exists ! \, \alpha \in [a, b], \; f(\alpha) = k',
+                    'latex' => 'f \text{ continue et strictement monotone sur } [a, b] \implies \exists ! \, \alpha \in [a, b], \; f(\alpha) = k',
                     'conditions' => 'Trois conditions strictes : continuité, stricte monotonie (croissante ou décroissante), et $k \in f([a, b])$.',
                     'comment' => 'Garantit l\'EXISTENCE ET L\'UNICITÉ d\'une unique solution notée $\alpha$. Exigence absolue des jurys du BAC togolais.',
                 ],

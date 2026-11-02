@@ -513,10 +513,97 @@
     color: #D4F25C;
 }
 .course-theorem-card {
+    background: var(--immersion-pane);
+    border: 1.5px solid var(--immersion-border);
+    border-radius: 12px;
+    padding: 14px clamp(12px, 2vw, 20px);
     transition: transform 0.15s ease, border-color 0.15s ease;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 .course-theorem-card:hover {
     border-color: #0284C7 !important;
+}
+
+.course-def-card {
+    background: var(--immersion-pane);
+    border: 1.5px solid var(--immersion-border);
+    border-radius: 10px;
+    padding: 12px clamp(12px, 2vw, 18px);
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.course-formula-box {
+    background: var(--immersion-card);
+    border: 1px solid var(--immersion-border);
+    border-radius: 8px;
+    padding: 10px clamp(8px, 1.5vw, 16px);
+    margin: 8px 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    text-align: center;
+    position: relative;
+}
+
+/* Scrollbars ultra-fines pour les formules mathématiques qui dépassent */
+.course-formula-box::-webkit-scrollbar,
+.katex-display::-webkit-scrollbar {
+    height: 4px !important;
+}
+.course-formula-box::-webkit-scrollbar-track,
+.katex-display::-webkit-scrollbar-track {
+    background: rgba(14, 16, 34, 0.04) !important;
+    border-radius: 4px !important;
+}
+.course-formula-box::-webkit-scrollbar-thumb,
+.katex-display::-webkit-scrollbar-thumb {
+    background: rgba(14, 16, 34, 0.22) !important;
+    border-radius: 4px !important;
+}
+.course-formula-box::-webkit-scrollbar-thumb:hover,
+.katex-display::-webkit-scrollbar-thumb:hover {
+    background: #0284C7 !important;
+}
+
+/* Règle globale KaTeX : affichage fluide sans débordement */
+.katex-display {
+    display: block !important;
+    margin: 0.35em 0 !important;
+    text-align: center !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 4px 2px !important;
+    box-sizing: border-box !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(14, 16, 34, 0.22) transparent;
+}
+.katex-display > .katex {
+    display: inline-block !important;
+    text-align: center !important;
+    max-width: 100% !important;
+}
+.katex {
+    font-size: clamp(0.86em, 1.5vw, 1.05em) !important;
+    text-rendering: optimizeLegibility !important;
+}
+
+/* Sécurisation anti-débordement sur tout le contenu textuel et mathématique */
+.course-theorem-card,
+.course-def-card,
+.mk-ai-formatted,
+.chat-msg,
+#workshopModeCours,
+#workshopModeExercices {
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .tier-tab {
@@ -1330,13 +1417,13 @@ body.is-focus-mode .chat-input-bar {
     </div>
 
     {{-- Corps de l'Immersion : Split-Screen avec Document / Exercices à GAUCHE & Zone IA à DROITE --}}
-    <div id="workshopSplitGrid" style="flex: 1 1 0%; min-height: 0; width: 100%; height: 100%; max-height: 100%; overflow: hidden; display: grid; grid-template-columns: 1fr 390px; grid-template-rows: minmax(0, 1fr); background: var(--immersion-bg); transition: grid-template-columns 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div id="workshopSplitGrid" style="flex: 1 1 0%; min-height: 0; width: 100%; height: 100%; max-height: 100%; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) 390px; grid-template-rows: minmax(0, 1fr); background: var(--immersion-bg); transition: grid-template-columns 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
         
         {{-- COLONNE GAUCHE : VISUALISEUR DU COURS MAGISTRAL, EXERCICES 3 PALIERS OU ANNALES PDF --}}
-        <div id="workshopLeftCol" style="position: relative; height: 100%; max-height: 100%; min-height: 0; width: 100%; background: var(--immersion-bg); overflow: hidden; display: flex; flex-direction: column;">
+        <div id="workshopLeftCol" style="position: relative; height: 100%; max-height: 100%; min-height: 0; min-width: 0; width: 100%; max-width: 100%; background: var(--immersion-bg); overflow: hidden; display: flex; flex-direction: column;">
             
             {{-- MODE 1 : COURS MAGISTRAL & NOTIONS CLÉS (ACTIF PAR DÉFAUT - ZÉRO BRUIT, GRAND CONFORT) --}}
-            <div id="workshopModeCours" style="display: block; flex: 1 1 0%; min-height: 0; height: 100%; max-height: 100%; width: 100%; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 26px 32px; box-sizing: border-box; background: var(--immersion-card);">
+            <div id="workshopModeCours" style="display: block; flex: 1 1 0%; min-height: 0; min-width: 0; height: 100%; max-height: 100%; width: 100%; max-width: 100%; overflow-y: auto !important; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 22px clamp(14px, 2.5vw, 32px); box-sizing: border-box; background: var(--immersion-card);">
                 
                 {{-- En-tête officiel du cours --}}
                 <div style="margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1.5px solid var(--immersion-border);">
@@ -1384,7 +1471,7 @@ body.is-focus-mode .chat-input-bar {
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         @foreach($chapterPedagogy['definitions'] as $def)
-                        <div style="background: var(--immersion-pane); border: 1.5px solid var(--immersion-border); border-radius: 10px; padding: 14px 18px;">
+                        <div class="course-def-card">
                             <b style="font-size: 13.5px; color: var(--immersion-text); display: block; margin-bottom: 4px;">{{ $def['term'] }}</b>
                             <div style="font-size: 13px; line-height: 1.55; color: var(--immersion-subtext);">
                                 {!! $def['definition'] !!}
@@ -1406,7 +1493,7 @@ body.is-focus-mode .chat-input-bar {
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 14px;">
                         @foreach($chapterPedagogy['theorems'] as $th)
-                        <div class="course-theorem-card" style="background: var(--immersion-pane); border: 1.5px solid var(--immersion-border); border-radius: 12px; padding: 16px 20px;">
+                        <div class="course-theorem-card">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 10px; flex-wrap: wrap;">
                                 <span style="font-size: 12px; font-weight: 850; color: #0284C7; text-transform: uppercase; letter-spacing: 0.03em;">
                                     {{ $th['title'] }}
@@ -1416,7 +1503,7 @@ body.is-focus-mode .chat-input-bar {
                                     <span>Demander au Tuteur IA</span> →
                                 </button>
                             </div>
-                            <div style="background: var(--immersion-card); border: 1px solid var(--immersion-border); border-radius: 8px; padding: 12px 16px; margin: 8px 0; font-size: 15px; color: var(--immersion-text); text-align: center;">
+                            <div class="course-formula-box">
                                 $${!! $th['latex'] !!}$$
                             </div>
                             <div style="font-size: 12.5px; line-height: 1.55; color: var(--immersion-text); margin-bottom: 4px;">
@@ -1463,9 +1550,9 @@ body.is-focus-mode .chat-input-bar {
                 @endif
 
                 {{-- Méthode Officielle & Pièges Classiques au BAC --}}
-                <div style="margin-bottom: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                <div style="margin-bottom: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px;">
                     @if(!empty($chapterPedagogy['trap']))
-                    <div style="background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; padding: 14px 18px;">
+                    <div style="background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 12px; padding: 14px 18px; box-sizing: border-box; overflow: hidden;">
                         <div style="font-size: 11.5px; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; color: #92400E; margin-bottom: 6px;">
                             Piège Classique au BAC
                         </div>
@@ -1476,7 +1563,7 @@ body.is-focus-mode .chat-input-bar {
                     @endif
 
                     @if(!empty($chapterPedagogy['redaction_tip']))
-                    <div style="background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 12px; padding: 14px 18px;">
+                    <div style="background: #F0FDF4; border: 1.5px solid #BBF7D0; border-radius: 12px; padding: 14px 18px; box-sizing: border-box; overflow: hidden;">
                         <div style="font-size: 11.5px; font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; color: #166534; margin-bottom: 6px;">
                             Conseil des Jurys MEPST
                         </div>
@@ -1493,11 +1580,11 @@ body.is-focus-mode .chat-input-bar {
                     <div style="font-size: 12px; font-weight: 850; text-transform: uppercase; letter-spacing: 0.04em; color: var(--immersion-text); margin-bottom: 10px;">
                         Formules Incontournables à Mémoriser
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px;">
                         @foreach($chapterPedagogy['formula_sheet'] as $f)
-                        <div style="background: var(--immersion-pane); border: 1px solid var(--immersion-border); border-radius: 8px; padding: 10px 14px;">
+                        <div style="background: var(--immersion-pane); border: 1px solid var(--immersion-border); border-radius: 8px; padding: 10px 14px; box-sizing: border-box; overflow: hidden;">
                             <div style="font-size: 11px; font-weight: 700; color: var(--immersion-subtext);">{{ $f['name'] }}</div>
-                            <div style="font-size: 13px; font-weight: 800; color: var(--immersion-text); padding: 4px 0;">$${!! $f['formula'] !!}$$</div>
+                            <div class="course-formula-box" style="margin: 4px 0 0; padding: 6px 10px; font-size: 13px;">$${!! $f['formula'] !!}$$</div>
                         </div>
                         @endforeach
                     </div>

@@ -1577,6 +1577,44 @@
             color: #D4F25C;
             border-color: #0E1022;
         }
+
+        /* Responsive universel des formules mathématiques KaTeX */
+        .katex-display {
+            display: block !important;
+            margin: 0.35em 0 !important;
+            text-align: center !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 4px 2px !important;
+            box-sizing: border-box !important;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(14, 16, 34, 0.22) transparent;
+        }
+        .katex-display::-webkit-scrollbar {
+            height: 4px !important;
+        }
+        .katex-display::-webkit-scrollbar-track {
+            background: rgba(14, 16, 34, 0.04) !important;
+            border-radius: 4px !important;
+        }
+        .katex-display::-webkit-scrollbar-thumb {
+            background: rgba(14, 16, 34, 0.22) !important;
+            border-radius: 4px !important;
+        }
+        .katex-display::-webkit-scrollbar-thumb:hover {
+            background: #0284C7 !important;
+        }
+        .katex-display > .katex {
+            display: inline-block !important;
+            text-align: center !important;
+            max-width: 100% !important;
+        }
+        .katex {
+            font-size: clamp(0.86em, 1.5vw, 1.05em) !important;
+            text-rendering: optimizeLegibility !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -2146,12 +2184,13 @@ window.mkApplyAiPaneWidth = function(splitContainer, aiPane, widthPx) {
     const rect = splitContainer.getBoundingClientRect();
     const totalW = rect.width || window.innerWidth;
     const minW = 280;
-    const maxW = Math.max(420, Math.floor(totalW * 0.72));
+    const minLeftW = 340;
+    const maxW = Math.max(minW, Math.floor(totalW - minLeftW));
     const clampedW = Math.min(maxW, Math.max(minW, Math.round(widthPx)));
 
     const computedDisplay = window.getComputedStyle(splitContainer).display;
     if (computedDisplay === 'grid') {
-        splitContainer.style.gridTemplateColumns = `1fr ${clampedW}px`;
+        splitContainer.style.gridTemplateColumns = `minmax(0, 1fr) ${clampedW}px`;
     } else {
         aiPane.style.width = `${clampedW}px`;
         aiPane.style.minWidth = `${clampedW}px`;
