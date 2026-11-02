@@ -1007,7 +1007,7 @@ html, body {
             <div class="ths-profile-mid-row">
                 <div class="ths-student-side">
                     <h1 class="ths-student-name">
-                        {{ $student->first_name ?? 'Kodjo' }} {{ $student->last_name ?? 'Mensah' }}
+                        {{ !empty($student->full_name) ? $student->full_name : 'Élève' }}
                     </h1>
                 </div>
 

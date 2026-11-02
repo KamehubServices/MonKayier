@@ -170,7 +170,7 @@ function startNewDiscussion() {
     const feed = document.getElementById('assistantFeed');
     feed.innerHTML = `
         <div style="background:#F3F4FA;padding:16px;border-radius:4px 20px 20px 20px;max-width:85%;line-height:1.6;font-size:14px">
-            Bonjour Kodjo ! Sur quel sujet ou devoir souhaites-tu travailler ensemble ce soir ? Tu peux m'écrire un énoncé d'exercice en Maths, Physique ou SVT.
+            Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }} ! Sur quel sujet ou devoir souhaites-tu travailler ensemble ce soir ? Tu peux m'écrire un énoncé d'exercice en Maths, Physique ou SVT.
         </div>
     `;
     currentStep = 1;

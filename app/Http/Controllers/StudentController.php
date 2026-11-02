@@ -1140,13 +1140,7 @@ class StudentController extends Controller
 
             // Déduplication intelligente par titre normalisé (en ignorant singulier/pluriel, accents et préfixes)
             $subjCourses = $subjCourses->unique(function ($c) {
-                $cleaned = preg_replace('/^(chapitre\s*\d+\s*[:\.]?|thème\s*\d+\s*[:\.]?|[·:\-\s]+)/iu', '', $c->title);
-                $cleaned = str_replace(['’', "'", '-', '·', ':', ',', 'collabaoration'], [' ', ' ', ' ', ' ', ' ', ' ', 'collaboration'], mb_strtolower($cleaned));
-                $cleaned = iconv('UTF-8', 'ASCII//TRANSLIT', $cleaned);
-                $cleaned = preg_replace('/[^a-zA-Z0-9\s]/', '', $cleaned);
-                $words = explode(' ', trim($cleaned));
-                $stemmed = array_map(function($w) { return rtrim($w, 's'); }, array_filter($words));
-                return implode(' ', $stemmed);
+                return \App\Services\Curriculum\CurriculumMapService::dedupeKey($c);
             })->values();
 
             // Si c'est le Français et qu'il n'y a que 3 thèmes, enrichir avec les 3 modules méthodologiques officiels du BAC
@@ -1719,16 +1713,23 @@ class StudentController extends Controller
             ->values()
             ->toArray();
 
-        // Récupération ou construction du contexte textuel précis du cours et de la section affichée
-        $contextText = $request->input('context_text');
+        // Contexte officiel complet du chapitre (le tuteur en extrait ensuite les passages pertinents)
+        $screenText = trim((string) $request->input('context_text', ''));
         $activeTab = $request->input('active_tab', 'cours');
         $currentExercise = $request->input('current_exercise');
         $interactionMode = $request->input('interaction_mode', 'standard');
 
-        if (empty($contextText) && $course) {
+        $contextText = '';
+        if ($course) {
+            $course->clean_title = \App\Services\Curriculum\CurriculumMapService::cleanTitle($course->title);
             $courseService = app(\App\Services\Curriculum\OfficialCourseService::class);
             $pedagogy = $this->buildChapterPedagogy($course, $course->subject_code ?? 'MATHS');
             $contextText = $courseService->formatPedagogyAsContext($pedagogy, $course, $activeTab, $currentExercise);
+        }
+
+        // Le texte vu à l'écran n'est ajouté que s'il apporte du nouveau (exercice, brouillon de l'élève...)
+        if ($screenText !== '' && ($contextText === '' || $activeTab !== 'cours')) {
+            $contextText .= "\n\nCONTENU ACTUELLEMENT AFFICHÉ À L'ÉCRAN :\n" . Str::limit($screenText, 1200, '...');
         }
 
         // Appel du tuteur avec le cours sous les yeux et le mode d'interaction actif
@@ -1784,6 +1785,37 @@ class StudentController extends Controller
                 }
             }
         }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Enregistre le retour de l'élève sur une réponse du tuteur (trop long, trop court, pas clair, utile).
+     */
+    public function tutorFeedback(Request $request)
+    {
+        $data = $request->validate([
+            'rating' => 'required|in:good,too_long,too_short,unclear',
+            'intent' => 'nullable|string|max:40',
+            'length_profile' => 'nullable|string|max:20',
+            'question' => 'nullable|string|max:1000',
+            'answer_excerpt' => 'nullable|string|max:1000',
+            'course_id' => 'nullable|string|max:64',
+        ]);
+
+        $student = $this->getStudent();
+        DB::table('tutor_feedback')->insert([
+            'id' => (string) Str::uuid(),
+            'student_user_id' => $student->id,
+            'rating' => $data['rating'],
+            'intent' => $data['intent'] ?? null,
+            'length_profile' => $data['length_profile'] ?? null,
+            'question' => $data['question'] ?? null,
+            'answer_excerpt' => $data['answer_excerpt'] ?? null,
+            'course_id' => $data['course_id'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return response()->json(['success' => true]);
     }

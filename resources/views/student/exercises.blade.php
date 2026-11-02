@@ -413,7 +413,7 @@
                     <div id="tutorMessagesContainer" class="tutor-messages-scroll">
                         <div class="tutor-msg msg-ai">
                             <div class="msg-bubble">
-                                Bonjour Kodjo ! Je suis ton tuteur IA pour cette épreuve officielle. Traite le sujet à ton rythme sur ton cahier, et clique sur <b>« Soumettre mon devoir »</b> en haut dès que tu as terminé !
+                                Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }} ! Je suis ton tuteur IA pour cette épreuve officielle. Traite le sujet à ton rythme sur ton cahier, et clique sur <b>« Soumettre mon devoir »</b> en haut dès que tu as terminé !
                             </div>
                         </div>
                     </div>
@@ -2298,12 +2298,13 @@ function renderOfficialExamAtelier(ex) {
         }
     }
 
+    const studentName = '{{ ($student->first_name ?? '') !== "Nouvel" ? ($student->first_name ?? "toi") : "toi" }}';
     const msgBox = document.getElementById('tutorMessagesContainer');
     if (msgBox) {
         msgBox.innerHTML = `
             <div class="tutor-msg msg-ai">
                 <div class="msg-bubble">
-                    Bonjour Kodjo ! Je suis ton tuteur IA pour l'épreuve officielle : <b>« ${escapeHtml(ex.title)} »</b>. Traite le sujet à ton rythme sur ton cahier, et clique sur <b>« Soumettre mon devoir »</b> en haut dès que tu as terminé !
+                    Bonjour ${studentName} ! Je suis ton tuteur IA pour l'épreuve officielle : <b>« ${escapeHtml(ex.title)} »</b>. Traite le sujet à ton rythme sur ton cahier, et clique sur <b>« Soumettre mon devoir »</b> en haut dès que tu as terminé !
                 </div>
             </div>
         `;

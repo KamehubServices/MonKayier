@@ -55,7 +55,7 @@
 
         <div style="text-align:center">
             <b id="oralQuestionText" class="hd" style="font-size:19px;line-height:1.4;display:block;max-width:560px;margin:0 auto">
-                « Bonjour Kodjo. Clique sur le microphone pour me poser une question à voix haute ou tester tes connaissances sur ce chapitre. »
+                « Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }}. Clique sur le microphone pour me poser une question à voix haute ou tester tes connaissances sur ce chapitre. »
             </b>
             <div id="oralInstruction" class="mu" style="margin-top:6px">
                 Clique sur l'orbe central pour parler, ou choisis une action rapide ci-dessous.
@@ -112,13 +112,13 @@
                 <div style="background:#ECEBFF;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.55;color:#0E1022">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                         <b style="color:#4F46E5">Tuteur IA MonKayier</b>
-                        <button type="button" class="mk-tts-btn" data-speech="Bonjour Kodjo. Je suis prêt pour notre séance orale sur le programme officiel de Terminale D. Clique sur le micro ou choisis un sujet pour commencer." onclick="window.mkSpeakHuman(this.dataset.speech, this, currentVoice)">
+                        <button type="button" class="mk-tts-btn" data-speech="Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }}. Je suis prêt pour notre séance orale sur le programme officiel de Terminale D. Clique sur le micro ou choisis un sujet pour commencer." onclick="window.mkSpeakHuman(this.dataset.speech, this, currentVoice)">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                             <span>Écouter</span>
                         </button>
                     </div>
                     <div class="mk-ai-formatted">
-                        <p class="mk-ai-p">Bonjour Kodjo. Je suis prêt pour notre séance orale sur le programme officiel de Terminale D. Clique sur le micro ou choisis une question pour commencer.</p>
+                        <p class="mk-ai-p">Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }}. Je suis prêt pour notre séance orale sur le programme officiel de Terminale D. Clique sur le micro ou choisis une question pour commencer.</p>
                     </div>
                 </div>
             </div>
@@ -133,7 +133,8 @@ let vocalSilenceTimer = null;
 let currentVoice = localStorage.getItem('mk_tutor_voice') || 'kodjo';
 let currentVocalCourseId = null;
 let currentVocalCourseContext = '';
-let lastAiSpokenText = "Bonjour Kodjo. Clique sur le microphone pour me poser une question à voix haute ou tester tes connaissances sur ce chapitre.";
+const vocalStudentName = '{{ ($student->first_name ?? "") !== "Nouvel" ? ($student->first_name ?? "toi") : "toi" }}';
+let lastAiSpokenText = `Bonjour ${vocalStudentName}. Clique sur le microphone pour me poser une question à voix haute ou tester tes connaissances sur ce chapitre.`;
 let vocalRecognition = null;
 
 function toggleContinuousVocalLoop() {
@@ -201,9 +202,9 @@ function selectVoice(v) {
     highlightSelectedVoice(v);
 
     const intros = {
-        kodjo: "Bonjour Kodjo, ici Coach Kodjo. Je t'accompagne à l'oral avec enthousiasme pour réussir ton Baccalauréat.",
-        afi: "Bonjour Kodjo, je suis Afi, ta tutrice IA. Travaillons ensemble chaque étape de ce chapitre avec clarté.",
-        mawuli: "Bonjour Kodjo, ici le professeur Mawuli. Concentrons-nous sur la rigueur scientifique de tes démonstrations."
+        kodjo: `Bonjour ${vocalStudentName}, ici Coach Kodjo. Je t'accompagne à l'oral avec enthousiasme pour réussir ton Baccalauréat.`,
+        afi: `Bonjour ${vocalStudentName}, je suis Afi, ta tutrice IA. Travaillons ensemble chaque étape de ce chapitre avec clarté.`,
+        mawuli: `Bonjour ${vocalStudentName}, ici le professeur Mawuli. Concentrons-nous sur la rigueur scientifique de tes démonstrations.`
     };
     speakHumanVocal(intros[v] || intros.kodjo);
 }

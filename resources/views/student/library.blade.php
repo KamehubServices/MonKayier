@@ -1276,10 +1276,11 @@ function initBiblioAiFeed(title, subject, isExam) {
     const welcomeDiv = document.createElement('div');
     welcomeDiv.style.cssText = 'background: var(--immersion-card); border: 1.5px solid var(--immersion-card-border); padding: 12px 14px; border-radius: 4px 14px 14px 14px; line-height: 1.55; font-size: 13px; color: var(--immersion-text);';
 
+    const studentName = '{{ ($student->first_name ?? "") !== "Nouvel" ? ($student->first_name ?? "toi") : "toi" }}';
     if (isExam) {
-        welcomeDiv.innerHTML = `Bonjour Kodjo ! Je suis ton tuteur IA pour cette épreuve officielle : <b>« ${title} »</b> (${subject}). Tu peux me poser des questions sur la méthode de résolution, les pièges du barème ou me demander de t'aider sur un exercice précis.`;
+        welcomeDiv.innerHTML = `Bonjour ${studentName} ! Je suis ton tuteur IA pour cette épreuve officielle : <b>« ${title} »</b> (${subject}). Tu peux me poser des questions sur la méthode de résolution, les pièges du barème ou me demander de t'aider sur un exercice précis.`;
     } else {
-        welcomeDiv.innerHTML = `Bonjour Kodjo ! Je suis ton tuteur IA pour le cours : <b>« ${title} »</b> (${subject}). Tu peux me poser tes questions, me demander un résumé express, des formules clés ou une analogie concrète.`;
+        welcomeDiv.innerHTML = `Bonjour ${studentName} ! Je suis ton tuteur IA pour le cours : <b>« ${title} »</b> (${subject}). Tu peux me poser tes questions, me demander un résumé express, des formules clés ou une analogie concrète.`;
     }
 
     feed.appendChild(welcomeDiv);

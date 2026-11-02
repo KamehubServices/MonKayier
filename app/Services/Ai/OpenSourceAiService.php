@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use App\Services\Curriculum\CurriculumMapService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -32,42 +33,72 @@ class OpenSourceAiService
     }
 
     /**
-     * Génère une réponse socratique, intuitive et pédagogique pour le Tuteur IA dans la Révision IA.
-     * Combine fidélité au cours officiel affiché à l'écran et liberté d'explication pédagogique (analogies, vulgarisation, exemples).
+     * Répond comme un professeur : identifie le type de question (navigation, définition, explication,
+     * argumentation, exercice...), adapte la longueur de la réponse, reste dans le programme officiel
+     * MEPST Togo et situe l'élève grâce à la carte du programme.
      */
     public function askTutor(string $studentQuestion, ?object $course = null, array $conversationHistory = [], ?string $contextText = null, ?string $interactionMode = 'standard', ?object $student = null): array
     {
+        $courseTitle = $course ? ($course->clean_title ?? $course->title) : 'Programme National Lycée';
+        $subjectCode = $course->subject_code ?? 'MATHS';
+        $subjectName = $course->subject_name ?? 'Mathématiques';
+        $mode = strtolower(trim($interactionMode ?? 'standard'));
+        $levelLabel = $student->level_name ?? 'Terminale (BAC 2)';
+
         $studentFirstName = trim((string) ($student->first_name ?? ''));
         if (in_array(mb_strtolower($studentFirstName), ['', 'nouvel'], true)) {
             $studentFirstName = '';
         }
         $studentIdentityBlock = $studentFirstName !== ''
-            ? "\nIDENTITE DE L'ELEVE : il s'appelle {$studentFirstName}. Appelle-le par son prénom de temps en temps (sans exagérer), toujours en le TUTOYANT.\n"
-            : "\nL'élève n'a pas encore renseigné son prénom : ne l'invente pas, tutoie-le simplement.\n";
+            ? "L'élève s'appelle {$studentFirstName} : appelle-le par son prénom de temps en temps (sans exagérer)."
+            : "L'élève n'a pas renseigné son prénom : ne l'invente pas.";
 
-        $courseTitle = $course ? ($course->clean_title ?? $course->title) : 'Programme National Lycée';
-        $subjectCode = $course->subject_code ?? 'MATHS';
-        $subjectName = $course->subject_name ?? 'Mathématiques';
-        $mode = strtolower(trim($interactionMode ?? 'standard'));
+        // 1. Identification du type de question et du profil de réponse attendu
+        $route = app(TutorIntentRouter::class)->classify($studentQuestion, $conversationHistory, $mode);
 
-        $contextBlock = '';
-        if (!empty(trim($contextText ?? ''))) {
-            $contextBlock = "\n\n--- CONTENU DU COURS / EXERCICE AFFICHÉ SUR L'ÉCRAN DE L'ÉLÈVE ---\n" . trim($contextText) . "\n------------------------------------------------------------------\n";
+        // 2. Carte du programme officiel (ordre, numéro et contenu des chapitres)
+        $curriculum = app(CurriculumMapService::class);
+        $map = null;
+        try {
+            $map = $curriculum->mapForCourse($course);
+        } catch (\Throwable $e) {
+            Log::warning('CurriculumMapService indisponible : ' . $e->getMessage());
         }
 
-        $intentDirective = $this->buildIntentDirective($studentQuestion, $mode);
+        // 3. Questions de navigation : réponse exacte depuis la base, sans appel IA (instantanée)
+        if ($route['intent'] === 'navigation' && $map) {
+            $answer = $curriculum->answerNavigation($route, $map);
+            if ($answer !== null) {
+                return $this->buildTutorResponse($answer, $route, $courseTitle, $subjectCode, 'curriculum-map', null);
+            }
+        }
 
-        // Système de consignes pédagogiques hybrides : Intuition personnelle du professeur + Rigueur du cours officiel MEPST Togo
-        $systemPrompt = "Tu es le Tuteur IA d'excellence de la plateforme MonKayier au Togo, agissant comme un véritable professeur particulier passionné, chaleureux et pédagogue pour un élève de Lycée (Terminale BAC 2 / Première BAC 1) en {$subjectName} sur le chapitre : \"{$courseTitle}\".
+        $curriculumBlock = $map ? "\n" . $curriculum->formatForPrompt($map) . "\n" : '';
+
+        // 4. Passages du cours officiel les plus pertinents pour cette question
+        $contextBlock = '';
+        $selectedContext = app(CourseContextSelector::class)->select(trim($contextText ?? ''), $studentQuestion);
+        if ($selectedContext !== '') {
+            $contextBlock = "\n--- COURS OFFICIEL ET CONTENU AFFICHÉ À L'ÉCRAN DE L'ÉLÈVE ---\n{$selectedContext}\n------------------------------------------------------------------\n";
+        }
+
+        $intentDirective = $this->buildIntentDirective($route, $mode);
+
+        $systemPrompt = "Tu es le Tuteur IA de la plateforme MonKayier (Togo) : un vrai professeur particulier de {$subjectName}, chaleureux, clair et rigoureux, pour un élève de {$levelLabel}. Chapitre en cours : \"{$courseTitle}\".
 {$studentIdentityBlock}
-Règles de ton ABSOLUES : tutoie toujours l'élève (jamais de « vous »). Ne te présente PAS à chaque message et ne répète jamais « Je suis votre/ton Tuteur IA » : la conversation est déjà en cours. Va droit au but, de façon chaleureuse. Si l'élève te salue simplement, réponds par une salutation courte avec son prénom puis propose en une phrase de commencer.
-{$contextBlock}
-Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Officiel) :
-1. Liberté d'explication et pédagogie vivante : Tu ne dois PAS te contenter de réciter mécaniquement le cours. Explique les notions à ta manière, avec tes propres mots, des images mentales parlantes, des analogies concrètes du quotidien (par exemple des situations courantes à Lomé, Kara, en cuisine, en sport, en circulation ou dans la nature) pour débloquer la compréhension intuitive de l'élève.
-2. Pont systématique avec le cours officiel : Après avoir fait comprendre l'idée intuitivement (« Pourquoi ça marche »), relie toujours ton explication aux définitions, notations et théorèmes exacts présents sur la fiche de cours de l'élève (« Comment on l'écrit au BAC »).
-3. Ouverture intellectuelle : Si l'élève pose une question qui va au-delà de la fiche de cours (ex : « À quoi ça sert dans la vraie vie ? », « D'où vient cette formule ? », « Explique-moi avec un autre exemple »), utilise pleinement tes connaissances générales et scientifiques pour lui répondre avec clarté, puis montre le lien avec son chapitre.
-4. Accompagnement sur les exercices : Si l'élève travaille sur un exercice ou un palier, guide-le pas à pas avec bienveillance en lui expliquant la logique du raisonnement et les attentes du barème officiel du BAC togolais (MEPST).
-5. Formalisme et clarté visuelle : Utilise la syntaxe LaTeX standard ($..$ en ligne et $$..$$ en bloc centré) pour les formules mathématiques et chimiques. Structure ta réponse avec des titres courts et des puces aérées faciles à lire et agréables à écouter à l'oral. N'utilise JAMAIS d'émojis.
+{$curriculumBlock}{$contextBlock}
+PÉRIMÈTRE STRICT (programme officiel MEPST Togo) :
+- Ta source de vérité est le COURS OFFICIEL et le PROGRAMME ci-dessus. N'invente aucune définition, formule, théorème, date ou notion qui n'est pas au programme de {$levelLabel}.
+- Les analogies et exemples du quotidien (Lomé, Kara, marché, sport...) sont encouragés pour faire comprendre, mais le fond de ta réponse doit rester conforme au cours.
+- Si la question est hors programme, hors niveau ou sans rapport avec les études : ne réponds pas sur le fond. Dis en une phrase aimable que ce n'est pas au programme, puis propose de revenir au chapitre en cours ou à une autre notion de la matière.
+- Si la question concerne bien la matière mais que le cours fourni ne contient pas l'information : dis-le honnêtement et ramène l'élève vers la notion du programme la plus proche.
+
+COMPORTEMENT DE PROFESSEUR :
+- Réponds uniquement en français, sans mots anglais.
+- Tutoie toujours l'élève (jamais de « vous »). Ne te présente pas, ne dis pas « je suis ton tuteur IA » : la conversation est déjà en cours. Va droit au but.
+- Adapte la longueur et la structure au type de question (voir FORMAT IMPOSÉ ci-dessous). Une question simple appelle une réponse simple : ne fais jamais un cours complet quand on te pose une question courte.
+- Comprends les fautes de frappe et les phrases dictées à l'oral. Appuie-toi sur l'historique de la conversation pour comprendre les relances (« et ensuite ? », « pourquoi ? »).
+- Formules : syntaxe LaTeX standard (\$..\$ en ligne, \$\$..\$\$ en bloc). N'utilise JAMAIS d'émojis.
 
 {$intentDirective}";
 
@@ -75,12 +106,12 @@ Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Offic
             ['role' => 'system', 'content' => $systemPrompt]
         ];
 
-        // Intégration de l'historique récent (jusqu'à 6 messages)
+        // Historique récent (6 messages max, tronqués pour garder une réponse rapide)
         foreach (array_slice($conversationHistory, -6) as $msg) {
             $role = ($msg['role'] ?? 'user') === 'user' ? 'user' : 'assistant';
             $content = $msg['content'] ?? '';
             if (!empty($content)) {
-                $messages[] = ['role' => $role, 'content' => $content];
+                $messages[] = ['role' => $role, 'content' => Str::limit($content, 700, '...')];
             }
         }
 
@@ -97,7 +128,7 @@ Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Offic
             'qwen/qwen-2.5-7b-instruct',
         ]));
 
-        $maxTokens = ($mode === 'voice_call') ? 650 : 1500;
+        $temperature = in_array($route['length'], ['short', 'brief', 'hint'], true) ? 0.4 : 0.55;
 
         if ($this->isConfigured()) {
             foreach ($candidateModels as $tryModel) {
@@ -110,29 +141,17 @@ Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Offic
                     ])->timeout($this->timeout)->post("{$this->baseUrl}/chat/completions", [
                         'model' => $tryModel,
                         'messages' => $messages,
-                        'temperature' => 0.55,
-                        'max_tokens' => $maxTokens,
+                        'temperature' => $temperature,
+                        'max_tokens' => $route['max_tokens'],
                     ]);
 
                     if ($response->successful()) {
                         $json = $response->json();
                         $content = $json['choices'][0]['message']['content'] ?? null;
                         if (!empty($content)) {
-                            $ttsService = app(\App\Services\Ai\NeuralTtsService::class);
-                            $cleanHtml = $ttsService->formatMarkdownToCleanHtml($content);
-                            $spokenText = $ttsService->prepareTextForHumanSpeech($content);
+                            $content = $this->enforceLength($content, $route['max_words'], $route['length']);
 
-                            return [
-                                'success' => true,
-                                'source_text' => $cleanHtml,
-                                'raw_text' => $content,
-                                'spoken_text' => $spokenText,
-                                'citation' => "{$courseTitle} · Pédagogie Intuitive & Programme Togo",
-                                'complementary_text' => "Astuce BAC : Comprends d'abord l'idée avec tes propres mots, puis utilise les termes exacts du théorème sur ta copie.",
-                                'suggestions' => $this->generateRelevantSuggestions($subjectCode, $courseTitle),
-                                'model_used' => $tryModel,
-                                'provider' => 'open-weights',
-                            ];
+                            return $this->buildTutorResponse($content, $route, $courseTitle, $subjectCode, 'open-weights', $tryModel);
                         }
                     } else {
                         Log::warning("OpenSourceAiService tutor warning on {$tryModel}: " . $response->body());
@@ -148,63 +167,143 @@ Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Offic
     }
 
     /**
-     * Détecte l'intention de l'élève pour adapter dynamiquement la posture d'explication du Tuteur IA.
+     * Assemble la réponse du tuteur (texte affiché, texte parlé, suggestions) quelle que soit son origine.
      */
-    protected function buildIntentDirective(string $question, string $mode = 'standard'): string
+    protected function buildTutorResponse(string $content, array $route, string $courseTitle, string $subjectCode, string $provider, ?string $model): array
     {
-        $q = mb_strtolower($question);
+        $ttsService = app(\App\Services\Ai\NeuralTtsService::class);
+
+        return [
+            'success' => true,
+            'source_text' => $ttsService->formatMarkdownToCleanHtml($content),
+            'raw_text' => $content,
+            'spoken_text' => $ttsService->prepareTextForHumanSpeech($content),
+            'citation' => "{$courseTitle} · Programme officiel Togo",
+            // L'encadré « Méthode & Barème » n'a de sens que pour les réponses développées
+            'complementary_text' => in_array($route['length'], ['developed', 'method'], true)
+                ? "Astuce BAC : comprends d'abord l'idée avec tes propres mots, puis utilise les termes exacts du cours sur ta copie."
+                : '',
+            'suggestions' => $this->generateRelevantSuggestions($subjectCode, $courseTitle),
+            'model_used' => $model,
+            'provider' => $provider,
+            'intent' => $route['intent'],
+            'length_profile' => $route['length'],
+        ];
+    }
+
+    /**
+     * Garde-fou : si le modèle dépasse nettement la longueur du profil, on coupe proprement
+     * (par paragraphe puis par phrase, sans casser une formule LaTeX).
+     */
+    protected function enforceLength(string $text, int $maxWords, string $length): string
+    {
+        $slack = in_array($length, ['short', 'brief', 'hint'], true) ? 1.35 : 1.6;
+        $limit = (int) ceil($maxWords * $slack);
+        $countWords = fn (string $s) => count(preg_split('/\s+/u', trim($s), -1, PREG_SPLIT_NO_EMPTY));
+
+        $text = trim($text);
+        if ($countWords($text) <= $limit) {
+            return $text;
+        }
+
+        $out = [];
+        $used = 0;
+        foreach (preg_split('/\n\s*\n/', $text) as $paragraph) {
+            $pw = $countWords($paragraph);
+            if ($used + $pw <= $limit) {
+                $out[] = $paragraph;
+                $used += $pw;
+                continue;
+            }
+
+            $kept = '';
+            foreach (preg_split('/(?<=[.!?])\s+/u', $paragraph, -1, PREG_SPLIT_NO_EMPTY) as $sentence) {
+                $sw = $countWords($sentence);
+                if ($used + $sw > $limit) {
+                    break;
+                }
+                $kept .= ($kept === '' ? '' : ' ') . $sentence;
+                $used += $sw;
+            }
+            if ($kept !== '' && substr_count($kept, '$') % 2 === 0) {
+                $out[] = $kept;
+            }
+            break;
+        }
+
+        $result = trim(implode("\n\n", $out));
+        if ($result === '') {
+            $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+            $result = rtrim(implode(' ', array_slice($words, 0, $limit)), ',;:') . '.';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Consigne de format selon le type de question : c'est ici que le tuteur décide s'il doit
+     * répondre en une phrase, en un court paragraphe ou en argumentant comme un professeur.
+     */
+    protected function buildIntentDirective(array $route, string $mode = 'standard'): string
+    {
+        $words = $route['max_words'];
+        $intent = $route['intent'];
+        $sub = $route['subtype'] ?? null;
 
         if ($mode === 'voice_call') {
-            return "MODE APPEL VOCAL EN DIRECT (STYLE CHATGPT VOICE) ACTIF :
-Tu es actuellement en appel vocal mains-libres en direct avec l'élève.
-- Réponds avec le naturel d'une vraie conversation orale humaine : 2 à 3 paragraphes courts et fluides (environ 80 à 140 mots).
-- Donne une analogie parlante et explique l'essentiel sans noyer l'élève sous de longues listes de formules.
-- Termine TOUJOURS par une courte question orale naturelle pour relancer l'échange (ex : « Est-ce que cette image est claire pour toi, ou veux-tu qu'on prenne un petit exemple ensemble ? »).";
+            return "MODE APPEL VOCAL EN DIRECT ACTIF : tu parles à l'élève, mains libres.
+FORMAT IMPOSÉ : réponse naturelle et orale, {$words} mots maximum (limite stricte), sans liste ni titre. Une question simple appelle une ou deux phrases seulement. Termine par une très courte question orale pour relancer l'échange uniquement si la réponse est un peu développée.";
         }
 
-        if ($mode === 'oral_exam' || str_contains($q, 'interroge-moi') || str_contains($q, 'oral du bac') || str_contains($q, 'simulation orale')) {
+        if ($mode === 'oral_exam' || str_contains($route['normalized'] ?? '', 'interroge moi') || str_contains($route['normalized'] ?? '', 'oral du bac') || str_contains($route['normalized'] ?? '', 'simulation orale')) {
             return "MODE EXAMINATEUR ORAL DU BAC TOGO ACTIF :
-- Si l'élève démarre l'interrogation ou demande une question : pose-lui UNE question orale précise et stimulante sur le chapitre affiché (définition, condition d'application d'un théorème ou petit calcul mental), et invite-le à répondre au micro ou à l'écrit.
-- Si l'élève vient de répondre à ta question : attribue-lui une note d'aisance sur 10 (ex : **Appréciation Orale : 8/10**), félicite ce qui est juste, corrige avec bienveillance ce qui manque pour avoir tous les points au BAC, puis enchaîne immédiatement avec une nouvelle question orale sur le chapitre !";
+- Si l'élève démarre l'interrogation ou demande une question : pose-lui UNE question orale précise sur le chapitre affiché (définition, condition d'application d'un théorème ou petit calcul mental) et invite-le à répondre au micro ou à l'écrit.
+- Si l'élève vient de répondre à ta question : attribue-lui une note d'aisance sur 10 (ex : **Appréciation Orale : 8/10**), félicite ce qui est juste, corrige avec bienveillance ce qui manque pour avoir tous les points au BAC, puis enchaîne avec une nouvelle question orale sur le chapitre.";
         }
 
-        if (
-            str_contains($q, 'enfant') ||
-            str_contains($q, 'analogie') ||
-            str_contains($q, 'simple') ||
-            str_contains($q, 'comprends pas') ||
-            str_contains($q, 'comprend pas') ||
-            str_contains($q, 'image') ||
-            str_contains($q, 'concret') ||
-            str_contains($q, 'ta manière') ||
-            str_contains($q, 'tes mots')
-        ) {
-            return "CONSIGNE PRIORITAIRE POUR CETTE QUESTION : L'élève demande une explication très intuitive et vulgarisée. Commence immédiatement par une histoire concrète ou une analogie très simple de tous les jours (sans jargon compliqué). Une fois l'image comprise, traduis-la doucement avec la formule ou la règle du cours.";
+        switch ($intent) {
+            case 'navigation':
+                return "FORMAT IMPOSÉ : réponse COURTE, 1 à 2 phrases, {$words} mots maximum. Indique simplement où en est l'élève dans le programme (numéro et intitulé exacts du PROGRAMME ci-dessus), sans commencer de cours.";
+
+            case 'social':
+                return "FORMAT IMPOSÉ : réponse très COURTE, une seule phrase chaleureuse ({$words} mots maximum), avec son prénom s'il est connu, puis UNE proposition concrète liée au chapitre en cours. Aucune explication de cours.";
+
+            case 'followup':
+                $detail = match ($sub) {
+                    'why' => "Donne la raison logique demandée, en 3 à 5 phrases, rattachée au cours.",
+                    'simplify' => "Reformule autrement, avec des mots plus simples et une image du quotidien, sans répéter ta phrase précédente.",
+                    'example' => "Donne UN exemple concret et complet, puis relie-le à la règle du cours.",
+                    'deepen' => "Développe en argumentant : idée, justification pas à pas, exemple, conclusion.",
+                    default => "Poursuis simplement là où tu t'étais arrêté, sans te répéter.",
+                };
+                return "FORMAT IMPOSÉ : l'élève réagit à ta dernière réponse (voir l'historique). {$detail} {$words} mots maximum (limite stricte). Ne te présente pas.";
+
+            case 'definition':
+                return "FORMAT IMPOSÉ : réponse BRÈVE, 2 à 4 phrases, {$words} mots maximum (limite stricte). Donne d'abord la définition ou la réponse exacte du cours, puis un mini-exemple seulement si cela aide. Termine en proposant d'approfondir (une demi-phrase).";
+
+            case 'reasoning':
+                return "FORMAT IMPOSÉ : explique la raison logique en 3 à 5 phrases, {$words} mots maximum (limite stricte) : cause, conséquence, lien avec la règle du cours. Pas de titres.";
+
+            case 'explanation':
+                if ($sub === 'application') {
+                    return "FORMAT IMPOSÉ : donne 2 ou 3 applications concrètes de la notion (ingénierie, santé, économie, vie au Togo...) en {$words} mots maximum (limite stricte), puis relie-les au chapitre.";
+                }
+                $lead = $sub === 'simplified'
+                    ? "Commence par une analogie très simple du quotidien, sans jargon, puis traduis-la avec la règle du cours."
+                    : "1) L'idée en mots simples (1 à 2 phrases, avec une image si utile), 2) la règle ou formule officielle du cours, 3) une courte relance.";
+                return "FORMAT IMPOSÉ : explication de longueur MOYENNE, {$words} mots maximum (limite stricte), sans titres. {$lead}";
+
+            case 'argument':
+                return "FORMAT IMPOSÉ : réponse ARGUMENTÉE comme un professeur, {$words} mots maximum (limite stricte), structurée ainsi mais sans afficher ces intitulés en toutes lettres (utilise « D'abord », « Ensuite », « Par exemple », « Donc ») : 1) Position claire (une phrase), 2) Justification en arguments distincts, chacun rattaché au cours ou à un théorème officiel, 3) Un exemple, 4) Conclusion en une phrase.";
+
+            case 'method':
+                return "FORMAT IMPOSÉ : méthode en étapes numérotées (1., 2., 3.) telles qu'attendues par les correcteurs du BAC au Togo, {$words} mots maximum (limite stricte), avec une phrase type de rédaction. Pas d'introduction ni de long préambule.";
+
+            case 'exercise':
+                return "FORMAT IMPOSÉ : l'élève travaille sur un exercice. Ne donne PAS la solution complète : donne UN indice ou UNE étape, puis pose-lui une question qui le fait avancer. {$words} mots maximum (limite stricte). Ne donne la solution détaillée que si l'élève a déjà proposé sa propre tentative.";
         }
 
-        if (
-            str_contains($q, 'sert à quoi') ||
-            str_contains($q, 'vraie vie') ||
-            str_contains($q, 'utilité') ||
-            str_contains($q, 'quotidien') ||
-            str_contains($q, 'application réelle')
-        ) {
-            return "CONSIGNE PRIORITAIRE POUR CETTE QUESTION : L'élève s'interroge sur l'utilité concrète de cette notion dans le monde réel. Donne-lui 2 ou 3 exemples passionnants d'applications réelles (ingénierie, médecine, architecture, économie, technologie au Togo et dans le monde), puis montre comment la formule du cours permet cela.";
-        }
-
-        if (
-            str_contains($q, 'exercice') ||
-            str_contains($q, 'palier') ||
-            str_contains($q, 'calcul') ||
-            str_contains($q, 'résoudre') ||
-            str_contains($q, 'démontrer') ||
-            str_contains($q, 'rédiger') ||
-            str_contains($q, 'méthode')
-        ) {
-            return "CONSIGNE PRIORITAIRE POUR CETTE QUESTION : L'élève cherche une méthode de résolution ou de rédaction. Donne-lui d'abord l'intuition de la méthode (« L'idée clé à retenir »), puis détaille les étapes exactes de rédaction telles qu'attendues par les correcteurs du BAC au Togo.";
-        }
-
-        return "CONSIGNE DE STRUCTURE : Organise ta réponse de façon vivante : 1) L'idée intuitive expliquée simplement à ta manière (avec une analogie ou un exemple parlant), 2) La règle ou formule officielle du cours expliquée clairement, 3) Un exemple concret ou un conseil pratique pour le BAC.";
+        return "FORMAT IMPOSÉ : réponds directement à la question posée, en {$words} mots maximum (limite stricte). Question très brève = réponse brève. Si l'élève veut approfondir, il te le demandera : propose-le en une demi-phrase.";
     }
 
     /**

@@ -3056,6 +3056,34 @@ function submitChatMessage(modeOverride) {
                 </div>` : ''}
             `;
 
+            // Retour de l'élève sur la réponse (sert à ajuster la longueur des réponses du tuteur)
+            const fbRow = document.createElement('div');
+            fbRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:#64748B';
+            fbRow.innerHTML = '<span>Cette réponse était :</span>';
+            [['good', 'Utile'], ['too_long', 'Trop longue'], ['too_short', 'Trop courte'], ['unclear', 'Pas claire']].forEach(([rating, label]) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = label;
+                b.style.cssText = 'border:1px solid #CBD5E1;background:#fff;color:#334155;border-radius:999px;padding:2px 9px;font-size:11px;cursor:pointer';
+                b.onclick = () => {
+                    fetch('{{ route("student.chat.feedback") }}', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
+                        body: JSON.stringify({
+                            rating: rating,
+                            intent: resp.intent || null,
+                            length_profile: resp.length_profile || null,
+                            question: msg,
+                            answer_excerpt: String(resp.raw_text || resp.source_text || '').replace(/<[^>]+>/g, ' ').substring(0, 600),
+                            course_id: currentCourseId ? String(currentCourseId) : null
+                        })
+                    }).catch(() => {});
+                    fbRow.innerHTML = '<span>Merci pour ton retour.</span>';
+                };
+                fbRow.appendChild(b);
+            });
+            assistantBlock.appendChild(fbRow);
+
             const ttsBtn = assistantBlock.querySelector('.mk-tts-btn');
             if (ttsBtn) {
                 ttsBtn.dataset.speech = rawSpeech;

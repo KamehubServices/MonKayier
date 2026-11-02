@@ -85,6 +85,7 @@ Route::prefix('student')->group(function () {
     Route::post('/chat/message', [StudentController::class, 'sendChatMessage'])->name('student.chat.message');
     Route::post('/chat/clear', [StudentController::class, 'clearChatHistory'])->name('student.chat.clear');
     Route::post('/chat/tts', [StudentController::class, 'synthesizeTts'])->name('student.chat.tts');
+    Route::post('/chat/feedback', [StudentController::class, 'tutorFeedback'])->name('student.chat.feedback');
     Route::post('/chat/evaluate-exercise', [StudentController::class, 'evaluateExercise'])->name('student.chat.evaluate');
     Route::post('/chat/track-time', [StudentController::class, 'trackStudyTime'])->name('student.chat.track_time');
 
