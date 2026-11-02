@@ -1730,11 +1730,11 @@ class StudentController extends Controller
         ]);
 
         $aiService = app(\App\Services\Ai\OpenSourceAiService::class);
-        // Historique : les 6 messages les plus RECENTS (hors message courant, ajouté par askTutor)
+        // Historique : les messages les plus récents (jusqu'à 12 tours, nettoyés du HTML pour une parfaite cohérence)
         $recentMessages = DB::table('ai_messages')
             ->where('conversation_id', $convId)
             ->orderBy('created_at', 'desc')
-            ->limit(7)
+            ->limit(13)
             ->get(['role', 'content'])
             ->reverse()
             ->values()
@@ -1742,10 +1742,14 @@ class StudentController extends Controller
             ->map(function ($m) {
                 $content = $m->content;
                 $decoded = json_decode($content, true);
-                if (is_array($decoded) && isset($decoded['source_text'])) {
-                    $content = $decoded['source_text'];
+                if (is_array($decoded)) {
+                    // Préférer le texte brut propre ou retirer les balises HTML
+                    $content = $decoded['raw_text'] ?? strip_tags($decoded['source_text'] ?? ($decoded['content'] ?? ''));
                 }
-                return ['role' => $m->role, 'content' => $content];
+                return ['role' => $m->role, 'content' => trim((string) $content)];
+            })
+            ->filter(function ($m) {
+                return !empty($m['content']);
             })
             ->values()
             ->toArray();

@@ -94,9 +94,20 @@ class TutorIntentRouter
      */
     protected function detectNavigation(string $norm, array $tokens): ?array
     {
+        // Règle d'or didactique : Si l'élève demande d'expliquer, résumer, détailler ou comprendre,
+        // c'est une requête d'enseignement (PEDAGOGICAL) et JAMAIS une simple métadonnée de navigation.
+        if ($this->hasAny($norm, [
+            'explique', 'expliquer', 'explication', 'comprendre', 'comprends', 'aide', 'aider',
+            'comment', 'pourquoi', 'resume', 'resumer', 'cours sur', 'definition', 'exemple',
+            'exercice', 'detaille', 'detailler', 'fais moi', 'montre moi', 'peux tu m expliquer', 'peux tu expliquer'
+        ])) {
+            return null;
+        }
+
         $chapterWord = $this->fuzzyHas($tokens, 'chapitre') || $this->fuzzyHas($tokens, 'lecon') || in_array('theme', $tokens, true);
         $courseWord = in_array('cours', $tokens, true);
-        $presence = $this->hasAny($norm, ['nous sommes', 'on est', 'on en est', 'ou en', 'ou sommes', 'ou est on', 'sommes nous', 'est on']);
+        $presence = $this->hasAny($norm, ['nous sommes', 'on est', 'on en est', 'ou en', 'ou sommes', 'ou est on', 'sommes nous', 'est on'])
+            || $this->fuzzyHas($tokens, 'sommes');
 
         // Programme complet : combien / liste
         if ($this->hasAny($norm, ['combien de chapitre', 'combien de chapitres', 'liste des chapitres', 'liste des chapitre', 'tous les chapitres', 'quels sont les chapitres', 'quels chapitres', 'sommaire', 'plan du cours', 'programme de la matiere'])) {
@@ -133,8 +144,8 @@ class TutorIntentRouter
             return ['subtype' => 'about_current'];
         }
 
-        // Position actuelle
-        if ($this->hasAny($norm, ['quel', 'quelle', 'lequel', 'laquelle', 'actuel', 'actuellement', 'en ce moment', 'travaille', 'etudie', 'revise', 'nom du chapitre', 'titre']) || $presence || $this->fuzzyHas($tokens, 'quel')) {
+        // Position actuelle : quel chapitre, où est-on ?
+        if ($this->hasAny($norm, ['quel', 'quelle', 'lequel', 'laquelle', 'nom du chapitre', 'titre', 'sur quel']) || $presence || $this->fuzzyHas($tokens, 'quel') || $this->fuzzyHas($tokens, 'ou')) {
             return ['subtype' => 'current'];
         }
 

@@ -47,5 +47,20 @@ class TutorIntentRouterTest extends TestCase
         $this->assertSame('developed', $router->classify('démontre que la suite converge')['length']);
         $this->assertLessThanOrEqual(180, $router->classify('démontre que la suite converge', [], 'voice_call')['max_words']);
     }
+
+    public function test_pedagogical_course_explanation_request_is_not_hijacked_by_navigation(): void
+    {
+        $router = new TutorIntentRouter();
+
+        // Ce cas précis (phrase réelle de l'élève) ne doit JAMAIS être classé en navigation
+        $route = $router->classify("j'aimerais que tu m'expliques le cours sur les chutes numériques le chapitre qui est ouvert actuellement");
+        $this->assertSame('explanation', $route['intent']);
+
+        $route2 = $router->classify("explique-moi le chapitre actuel en détail");
+        $this->assertSame('argument', $route2['intent']);
+
+        $route3 = $router->classify("peux-tu m'expliquer le cours en ce moment");
+        $this->assertSame('explanation', $route3['intent']);
+    }
 }
 
