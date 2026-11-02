@@ -1416,9 +1416,6 @@ function submitBiblioChatMessage() {
         setTimeout(renderBiblioKaTeX, 50);
         feed.scrollTop = feed.scrollHeight;
 
-        if (window.mkSpeakHuman) {
-            window.mkSpeakHuman(rawSpeech, ttsBtn);
-        }
 
         const suggestions = resp.suggestions || data.suggestions || [];
         if (suggestions.length > 0) {

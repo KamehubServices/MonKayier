@@ -3465,18 +3465,17 @@ function submitChatMessage(modeOverride) {
             setTimeout(renderKaTeX, 50);
             feed.scrollTop = feed.scrollHeight;
 
+            // Lecture vocale automatique UNIQUEMENT en mode Appel Vocal Mains-Libres
             if (isLiveVoiceCallActive) {
                 setLiveVoiceDockState('speaking', 'Le Tuteur IA te répond à voix haute...');
+                speakText(rawSpeech, ttsBtn, function() {
+                    if (isLiveVoiceCallActive) {
+                        setTimeout(() => {
+                            if (isLiveVoiceCallActive) startLiveVoiceListening();
+                        }, 350);
+                    }
+                });
             }
-
-            // Lecture vocale automatique, suivie de la réouverture automatique du micro si en Appel Vocal Mains-Libres !
-            speakText(rawSpeech, ttsBtn, function() {
-                if (isLiveVoiceCallActive) {
-                    setTimeout(() => {
-                        if (isLiveVoiceCallActive) startLiveVoiceListening();
-                    }, 350);
-                }
-            });
 
             if (resp.suggestions && resp.suggestions.length > 0) {
                 const chipsBox = document.getElementById('chipsContainer');
