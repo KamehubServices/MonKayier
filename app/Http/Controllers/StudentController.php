@@ -17,55 +17,299 @@ class StudentController extends Controller
         $this->pathEngine = $pathEngine;
 
         view()->composer(['student.*', 'layouts.student'], function ($view) {
-            $studentUser = auth()->user() ?? DB::table('users')->where('email', 'koffi.student@monkayier.tg')->first();
-            if ($studentUser) {
-                $profile = DB::table('user_profiles')->where('user_id', $studentUser->id)->first();
-                $unreadCount = DB::table('notifications')->where('user_id', $studentUser->id)->where('is_read', 0)->count();
+            $student = $this->getStudent();
+            if ($student) {
+                $unreadCount = DB::table('notifications')->where('user_id', $student->id)->where('is_read', 0)->count();
                 $view->with('currentStudent', (object)[
-                    'id' => $studentUser->id,
-                    'email' => $studentUser->email,
-                    'first_name' => $profile->first_name ?? 'Kodjo',
-                    'last_name' => $profile->last_name ?? 'Mensah',
-                    'initials' => strtoupper(substr($profile->first_name ?? 'K', 0, 1) . substr($profile->last_name ?? 'M', 0, 1)),
-                    'full_name' => ($profile->first_name ?? 'Kodjo') . ' ' . ($profile->last_name ?? 'Mensah'),
-                    'class_name' => 'Terminale D',
+                    'id' => $student->id,
+                    'email' => $student->email,
+                    'first_name' => $student->first_name,
+                    'last_name' => $student->last_name,
+                    'initials' => strtoupper(substr($student->first_name ?: 'E', 0, 1) . substr($student->last_name ?: 'M', 0, 1)),
+                    'full_name' => $student->full_name,
+                    'class_name' => $student->class_name,
                     'unread_notifs' => $unreadCount,
+                    'has_completed_test' => $this->hasCompletedLevelTest($student->id),
                 ]);
             }
         });
     }
 
     /**
-     * Récupère l'élève actuel (utilisateur connecté ou compte démo par défaut).
+     * Vérifie si l'élève a déjà effectué son Test de niveau initial (ou déposé ses bulletins)
+     */
+    protected function hasCompletedLevelTest(string $studentId): bool
+    {
+        $hasAttempt = DB::table('assessment_attempts')
+            ->where('student_user_id', $studentId)
+            ->where('status', 'submitted')
+            ->exists();
+
+        if ($hasAttempt) {
+            return true;
+        }
+
+        return DB::table('student_report_cards')
+            ->where('student_user_id', $studentId)
+            ->exists();
+    }
+
+    /**
+     * Récupère l'élève actuel connecté en session (ou compte initial vierge).
      */
     protected function getStudent()
     {
-        $studentUser = auth()->user();
+        $studentUser = null;
+        $sessionUserId = session('student_user_id');
+        if ($sessionUserId) {
+            $studentUser = DB::table('users')->where('id', $sessionUserId)->first();
+        }
+        if (!$studentUser && auth()->check()) {
+            $studentUser = auth()->user();
+        }
         if (!$studentUser) {
             $studentUser = DB::table('users')->where('email', 'koffi.student@monkayier.tg')->first();
         }
-        
+
         $profile = DB::table('user_profiles')->where('user_id', $studentUser->id)->first();
-        $educationLevel = DB::table('education_levels')->where('name', 'like', '%Terminale%')->first();
+        $className = session('student_class_name', 'Terminale D');
+
+        $levelSearch = 'Terminale';
+        if (stripos($className, 'Première') !== false || stripos($className, '1ère') !== false) {
+            $levelSearch = 'Première';
+        } elseif (stripos($className, 'Seconde') !== false || stripos($className, '2nde') !== false) {
+            $levelSearch = 'Seconde';
+        }
+        $educationLevel = DB::table('education_levels')->where('name', 'like', "%{$levelSearch}%")->first()
+            ?? DB::table('education_levels')->where('name', 'like', '%Terminale%')->first();
+
+        $firstName = ($profile && !empty($profile->first_name)) ? $profile->first_name : 'Nouvel';
+        $lastName = ($profile && !empty($profile->last_name)) ? $profile->last_name : 'Élève';
 
         return (object) [
             'id' => $studentUser->id,
             'email' => $studentUser->email,
-            'first_name' => $profile->first_name ?? 'Kodjo',
-            'last_name' => $profile->last_name ?? 'Mensah',
-            'full_name' => ($profile->first_name ?? 'Kodjo') . ' ' . ($profile->last_name ?? 'Mensah'),
-            'class_name' => 'Terminale D',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'full_name' => trim($firstName . ' ' . $lastName),
+            'class_name' => $className,
             'education_level_id' => $educationLevel->id ?? '01a161a5-8753-7108-84ee-01269c23311b',
             'level_name' => $educationLevel->name ?? 'Terminale (BAC 2)',
-            'bio' => $profile->bio ?? 'Élève en Terminale D au Lycée de Tokoin',
+            'bio' => $profile->bio ?? 'Terminale D · Parcours personnalisé MonKayier',
         ];
     }
 
     /**
-     * 1. Tableau de bord unifié dans Parcours
+     * Inscription réelle d'un nouvel utilisateur et création d'un profil 100% vierge
+     */
+    public function handleRegister(Request $request)
+    {
+        $fullName = trim($request->input('name', 'Nouvel Élève'));
+        $email = strtolower(trim($request->input('email', '')));
+        $password = $request->input('password', 'password123');
+        $role = $request->input('role', 'eleve');
+
+        if (empty($email)) {
+            $email = 'eleve.' . time() . '@monkayier.tg';
+        }
+
+        $parts = preg_split('/\s+/', $fullName, 2);
+        $firstName = $parts[0] ?? 'Nouvel';
+        $lastName = $parts[1] ?? 'Élève';
+
+        $existing = DB::table('users')->where('email', $email)->first();
+        if ($existing) {
+            $userId = $existing->id;
+            DB::table('users')->where('id', $userId)->update([
+                'password' => bcrypt($password),
+                'updated_at' => now(),
+            ]);
+            DB::table('user_profiles')->updateOrInsert(
+                ['user_id' => $userId],
+                [
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'bio' => 'Terminale D · Parcours en attente du Test de niveau',
+                    'updated_at' => now(),
+                ]
+            );
+            // Réinitialiser ses données d'apprentissage pour garantir un parcours vierge à la création du compte
+            $this->purgeStudentLearningData($userId);
+        } else {
+            $userId = (string) Str::uuid();
+            $country = DB::table('countries')->first();
+            DB::table('users')->insert([
+                'id' => $userId,
+                'country_id' => $country->id ?? '01a161a5-86f4-70d9-838b-94cfbe88e73a',
+                'email' => $email,
+                'password' => bcrypt($password),
+                'status' => 'active',
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            DB::table('user_profiles')->insert([
+                'user_id' => $userId,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'bio' => 'Terminale D · Parcours en attente du Test de niveau',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        session([
+            'student_user_id' => $userId,
+            'student_class_name' => 'Terminale D',
+        ]);
+        try { auth()->loginUsingId($userId); } catch (\Throwable $e) {}
+
+        $nextUrl = '/verify-email?type=register&role=' . urlencode($role) . '&email=' . urlencode($email);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'redirect_url' => $nextUrl]);
+        }
+        return redirect($nextUrl);
+    }
+
+    /**
+     * Connexion d'un utilisateur existant
+     */
+    public function handleLogin(Request $request)
+    {
+        $email = strtolower(trim($request->input('email', '')));
+        $user = DB::table('users')->where('email', $email)->first();
+
+        if (!$user && !empty($email)) {
+            $localPart = explode('@', $email)[0] ?? 'Eleve';
+            $nameParts = preg_split('/[\._\-]+/', $localPart, 2);
+            $firstName = ucfirst($nameParts[0] ?? 'Nouvel');
+            $lastName = ucfirst($nameParts[1] ?? 'Élève');
+
+            $userId = (string) Str::uuid();
+            $country = DB::table('countries')->first();
+            DB::table('users')->insert([
+                'id' => $userId,
+                'country_id' => $country->id ?? '01a161a5-86f4-70d9-838b-94cfbe88e73a',
+                'email' => $email,
+                'password' => bcrypt($request->input('password', 'password123')),
+                'status' => 'active',
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            DB::table('user_profiles')->insert([
+                'user_id' => $userId,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'bio' => 'Terminale D · Parcours en attente du Test de niveau',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $user = DB::table('users')->where('id', $userId)->first();
+        }
+
+        if ($user) {
+            session(['student_user_id' => $user->id]);
+            try { auth()->loginUsingId($user->id); } catch (\Throwable $e) {}
+        }
+
+        $nextUrl = '/verify-email?type=login&email=' . urlencode($email);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'redirect_url' => $nextUrl]);
+        }
+        return redirect($nextUrl);
+    }
+
+    /**
+     * Enregistrement des choix de l'Onboarding Élève (Niveau, Matières, Objectif)
+     */
+    public function handleOnboardingStudent(Request $request)
+    {
+        $student = $this->getStudent();
+        $level = trim($request->input('level', 'Terminale'));
+        $serie = trim($request->input('serie', 'D'));
+        $subjects = $request->input('subjects', ['Maths', 'Physique-Chimie', 'SVT']);
+        $objective = trim($request->input('objective', 'Préparer le BAC'));
+
+        $className = ($level === 'Terminale' || $level === 'Première') ? "{$level} {$serie}" : $level;
+        $subjectsStr = is_array($subjects) ? implode(', ', $subjects) : (string) $subjects;
+
+        session(['student_class_name' => $className]);
+
+        DB::table('user_profiles')->updateOrInsert(
+            ['user_id' => $student->id],
+            [
+                'bio' => "{$className} · Objectif : {$objective} ({$subjectsStr})",
+                'updated_at' => now(),
+            ]
+        );
+
+        // Redirection vers la confirmation qui envoie directement au Test de niveau initial obligatoire
+        $nextUrl = '/auth/success?type=student';
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'redirect_url' => $nextUrl]);
+        }
+        return redirect($nextUrl);
+    }
+
+    /**
+     * Déconnexion de la session
+     */
+    public function handleLogout(Request $request)
+    {
+        session()->forget(['student_user_id', 'student_class_name']);
+        try { auth()->logout(); } catch (\Throwable $e) {}
+        return redirect('/login');
+    }
+
+    /**
+     * Réinitialisation complète du parcours de l'élève pour revenir à l'état 100% vierge
+     */
+    public function resetStudentData(Request $request)
+    {
+        $student = $this->getStudent();
+        $this->purgeStudentLearningData($student->id);
+        session()->forget('student_exam_history_' . $student->id);
+
+        return redirect()->route('student.test', ['first_time' => 1])
+            ->with('success', 'Ton parcours a été entièrement remis à zéro. Passe ton Test de niveau pour générer un nouveau parcours.');
+    }
+
+    protected function purgeStudentLearningData(string $userId): void
+    {
+        $attemptIds = DB::table('assessment_attempts')->where('student_user_id', $userId)->pluck('id')->toArray();
+        if (!empty($attemptIds)) {
+            DB::table('attempt_answers')->whereIn('attempt_id', $attemptIds)->delete();
+            DB::table('assessment_attempts')->where('student_user_id', $userId)->delete();
+        }
+        DB::table('student_competencies')->where('student_user_id', $userId)->delete();
+        DB::table('student_report_cards')->where('student_user_id', $userId)->delete();
+
+        $planIds = DB::table('revision_plans')->where('student_user_id', $userId)->pluck('id')->toArray();
+        if (!empty($planIds)) {
+            $fkCol = \Illuminate\Support\Facades\Schema::hasColumn('revision_tasks', 'revision_plan_id') ? 'revision_plan_id' : 'plan_id';
+            DB::table('revision_tasks')->whereIn($fkCol, $planIds)->delete();
+            DB::table('revision_plans')->where('student_user_id', $userId)->delete();
+        }
+        DB::table('study_sessions')->where('student_user_id', $userId)->delete();
+
+        $convIds = DB::table('ai_conversations')->where('user_id', $userId)->pluck('id')->toArray();
+        if (!empty($convIds)) {
+            DB::table('ai_messages')->whereIn('conversation_id', $convIds)->delete();
+            DB::table('ai_conversations')->where('user_id', $userId)->delete();
+        }
+        DB::table('notifications')->where('user_id', $userId)->delete();
+    }
+
+    /**
+     * 1. Tableau de bord : Redirige vers le Test de niveau si c'est la première arrivée, sinon vers Parcours
      */
     public function dashboard()
     {
+        $student = $this->getStudent();
+        if (!$this->hasCompletedLevelTest($student->id)) {
+            return redirect()->route('student.test', ['first_time' => 1]);
+        }
         return redirect()->route('student.parcours');
     }
 
@@ -1628,14 +1872,16 @@ class StudentController extends Controller
         }
 
         $competencies = [
-            'maths' => $compMap['COMP-MATHS'] ?? 68,
-            'physique' => $compMap['COMP-PHYSIQUE'] ?? 55,
-            'svt' => $compMap['COMP-SVT'] ?? 72,
-            'francais' => $compMap['COMP-FRANCAIS'] ?? 65,
-            'philo' => $compMap['COMP-PHILO'] ?? 60,
+            'maths' => $compMap['COMP-MATHS'] ?? 0,
+            'physique' => $compMap['COMP-PHYSIQUE'] ?? 0,
+            'svt' => $compMap['COMP-SVT'] ?? 0,
+            'francais' => $compMap['COMP-FRANCAIS'] ?? 0,
+            'philo' => $compMap['COMP-PHILO'] ?? 0,
         ];
 
-        return view('student.test', compact('student', 'assessment', 'questions', 'competencies', 'reportCards', 'lastAttempt'));
+        $isFirstTime = !$this->hasCompletedLevelTest($student->id);
+
+        return view('student.test', compact('student', 'assessment', 'questions', 'competencies', 'reportCards', 'lastAttempt', 'isFirstTime'));
     }
 
     public function submitTest(Request $request)
@@ -1773,6 +2019,13 @@ class StudentController extends Controller
             }
         }
 
+        // Réinitialiser les tâches de révision en attente afin que le moteur adaptatif régénère les séances selon ce test
+        $planIds = DB::table('revision_plans')->where('student_user_id', $student->id)->pluck('id')->toArray();
+        if (!empty($planIds)) {
+            $fkCol = \Illuminate\Support\Facades\Schema::hasColumn('revision_tasks', 'revision_plan_id') ? 'revision_plan_id' : 'plan_id';
+            DB::table('revision_tasks')->whereIn($fkCol, $planIds)->where('status', 'pending')->delete();
+        }
+
         // Notification officielle
         DB::table('notifications')->insert([
             'id' => (string) Str::uuid(),
@@ -1832,17 +2085,44 @@ class StudentController extends Controller
         if (!empty($grades)) {
             $weightedSum = 0;
             $totalCoeffs = 0;
+            $subjToObjCode = [
+                'Mathématiques' => 'COMP-MATHS',
+                'Physique-Chimie' => 'COMP-PHYSIQUE',
+                'SVT' => 'COMP-SVT',
+                'Français' => 'COMP-FRANCAIS',
+                'Philosophie' => 'COMP-PHILO',
+            ];
             foreach ($grades as $subj => $rawVal) {
                 if ($rawVal !== null && $rawVal !== '') {
                     $val = floatval($rawVal);
                     $c = $coeffsMap[$subj] ?? 1;
                     $weightedSum += ($val * $c);
                     $totalCoeffs += $c;
+
+                    if (isset($subjToObjCode[$subj])) {
+                        $obj = DB::table('curriculum_objectives')->where('code', $subjToObjCode[$subj])->first();
+                        if ($obj) {
+                            $pct = max(0, min(100, (int) round(($val / 20) * 100)));
+                            DB::table('student_competencies')->updateOrInsert(
+                                ['student_user_id' => $student->id, 'objective_id' => $obj->id],
+                                [
+                                    'id' => (string) Str::uuid(),
+                                    'mastery_score' => $pct,
+                                    'evidence_count' => DB::raw('COALESCE(evidence_count, 0) + 1'),
+                                    'updated_at' => now(),
+                                ]
+                            );
+                        }
+                    }
                 }
             }
             if ($totalCoeffs > 0) {
                 $overallAverage = round($weightedSum / $totalCoeffs, 2);
             }
+        }
+
+        if ($overallAverage === null && $filePath) {
+            $overallAverage = 12.0;
         }
 
         $term = $request->input('term', 'Trimestre 1');
@@ -1966,44 +2246,8 @@ class StudentController extends Controller
         // Exercice initial pré-chargé (Mathématiques BAC 2 Terminale D)
         $defaultExercise = $this->getPrecalibratedExercise('MATHS', 'Limites, continuité et TVI', 'medium', 'exam');
 
-        $examHistory = [
-            [
-                'id' => 'ex_hist_1',
-                'title' => 'Épreuve Officielle de Mathématiques — BAC 2 Série D',
-                'subject_code' => 'MATHS',
-                'subject_name' => 'Mathématiques',
-                'chapters' => 'Limites, continuité et TVI',
-                'date' => '28 oct. 2026',
-                'status' => 'evaluated',
-                'score' => 16,
-                'max_score' => 20,
-                'mention' => 'Très bonne démarche',
-            ],
-            [
-                'id' => 'ex_hist_2',
-                'title' => 'Épreuve Officielle de Physique-Chimie (PCT) — BAC 2 Série D',
-                'subject_code' => 'PCT',
-                'subject_name' => 'Physique-Chimie',
-                'chapters' => 'Cinématique & Lois de Newton',
-                'date' => '26 oct. 2026',
-                'status' => 'evaluated',
-                'score' => 15,
-                'max_score' => 20,
-                'mention' => 'Bien',
-            ],
-            [
-                'id' => 'ex_hist_3',
-                'title' => 'Épreuve Officielle de SVT — BAC 2 Série D',
-                'subject_code' => 'SVT',
-                'subject_name' => 'SVT',
-                'chapters' => 'Génétique & Hérédité humaine',
-                'date' => '29 oct. 2026',
-                'status' => 'pending',
-                'score' => null,
-                'max_score' => 20,
-                'mention' => 'En attente de soumission',
-            ],
-        ];
+        // Historique réel des copies soumises par l'élève (vierge par défaut)
+        $examHistory = session('student_exam_history_' . $student->id, []);
 
         return view('student.exercises', [
             'currentStudent' => $student,
@@ -2087,6 +2331,25 @@ class StudentController extends Controller
                 // En cas d'indisponibilité réseau, l'analyse pré-calibrée prend le relais
             }
         }
+
+        // Enregistrer dans l'historique réel de l'élève
+        $student = $this->getStudent();
+        $historyKey = 'student_exam_history_' . $student->id;
+        $existingHistory = session($historyKey, []);
+        $subjNames = ['MATHS' => 'Mathématiques', 'PCT' => 'Physique-Chimie', 'SVT' => 'SVT', 'FRANCAIS' => 'Français', 'PHILO' => 'Philosophie'];
+        array_unshift($existingHistory, [
+            'id' => $exerciseId ?: ('ex_hist_' . time()),
+            'title' => 'Épreuve Officielle de ' . ($subjNames[$subjectCode] ?? $subjectCode) . ' — BAC 2 Série D',
+            'subject_code' => $subjectCode,
+            'subject_name' => $subjNames[$subjectCode] ?? $subjectCode,
+            'chapters' => $request->input('chapter', 'Entraînement officiel BAC'),
+            'date' => now()->format('d/m/Y H:i'),
+            'status' => 'evaluated',
+            'score' => $analysis['score'],
+            'max_score' => $analysis['max_score'],
+            'mention' => $analysis['mention'],
+        ]);
+        session([$historyKey => array_slice($existingHistory, 0, 20)]);
 
         return response()->json([
             'success' => true,
@@ -2606,6 +2869,12 @@ class StudentController extends Controller
     public function parcours()
     {
         $student = $this->getStudent();
+
+        // Première arrivée : rediriger obligatoirement vers le Test de niveau initial avant de construire le parcours
+        if (!$this->hasCompletedLevelTest($student->id)) {
+            return redirect()->route('student.test', ['first_time' => 1]);
+        }
+
         $pathData = $this->pathEngine->getFullPath($student->id);
         $dailySession = $this->pathEngine->getDailySession($student->id);
 
@@ -2641,19 +2910,34 @@ class StudentController extends Controller
             'session' => 'Session Normale Officielle',
         ];
 
-        // Matières officielles Terminale D avec coefficients nationaux et niveau de maîtrise
         // 1. Calcul du profil et de la calibration algorithmique (Notes QCM + Bulletins de classe)
         $curriculumEngine = \App\Services\PathEngine\AdaptivePathEngine::buildCurriculumJalons($student->id, $student->class_name ?? 'Terminale D');
         $gameNodes = $curriculumEngine['nodes'];
         $activeStepNum = $curriculumEngine['active_step'];
         $calibData = $curriculumEngine['calibration'];
 
-        // 2. Matières officielles selon la série avec coefficients et maîtrise dynamique
+        // 2. Matières officielles selon la série avec coefficients et maîtrise dynamique issue de la BDD
         $rawCoeffs = \App\Services\PathEngine\AdaptivePathEngine::getOfficialCoeffs($student->class_name ?? 'Terminale D');
+        $compRows = DB::table('student_competencies')
+            ->join('curriculum_objectives', 'student_competencies.objective_id', '=', 'curriculum_objectives.id')
+            ->where('student_user_id', $student->id)
+            ->select('curriculum_objectives.code', 'student_competencies.mastery_score')
+            ->get();
+
+        $dbCompMap = [];
+        foreach ($compRows as $cr) {
+            $cleanCode = str_replace('COMP-', '', strtoupper($cr->code));
+            if ($cleanCode === 'PHYSIQUE') {
+                $cleanCode = 'PCT';
+            }
+            $dbCompMap[$cleanCode] = (int) round((float) $cr->mastery_score);
+        }
+
+        $fallbackMastery = !empty($calibData['has_calibrated'])
+            ? max(0, min(100, (int) round(($calibData['combined_score'] / 20) * 100)))
+            : 0;
+
         $officialSubjects = [];
-        $compScores = [
-            'MATHS' => 68, 'PCT' => 62, 'SVT' => 72, 'FRANCAIS' => 70, 'PHILO' => 60, 'HIST_GEO' => 75, 'ANGLAIS' => 70
-        ];
         foreach ($rawCoeffs as $code => $info) {
             $officialSubjects[] = [
                 'id' => $info['subject_id'],
@@ -2661,7 +2945,7 @@ class StudentController extends Controller
                 'short' => $info['name'],
                 'coeff' => "Coeff. {$info['coeff']} (Épreuve officielle)",
                 'coeff_num' => $info['coeff'],
-                'mastery' => $compScores[$code] ?? 65,
+                'mastery' => $dbCompMap[$code] ?? $fallbackMastery,
                 'color' => $info['color'],
             ];
         }
@@ -2687,6 +2971,7 @@ class StudentController extends Controller
             'overallMasteryPercent',
             'gameNodes',
             'activeNode',
+            'activeStepNum',
             'completedNodesCount',
             'curriculumProgressPercent',
             'calibData'
@@ -2767,7 +3052,63 @@ class StudentController extends Controller
     public function history()
     {
         $student = $this->getStudent();
-        return view('student.history', compact('student'));
+
+        // Récupérer les compétences réelles de l'élève
+        $compRows = DB::table('student_competencies')
+            ->join('curriculum_objectives', 'student_competencies.objective_id', '=', 'curriculum_objectives.id')
+            ->leftJoin('subjects', 'curriculum_objectives.subject_id', '=', 'subjects.id')
+            ->where('student_user_id', $student->id)
+            ->select(
+                'curriculum_objectives.code',
+                'curriculum_objectives.description',
+                'student_competencies.mastery_score',
+                'student_competencies.updated_at',
+                'subjects.name as subject_name'
+            )
+            ->get();
+
+        $masteredCount = $compRows->where('mastery_score', '>=', 70)->count();
+        $toReviewCount = $compRows->whereBetween('mastery_score', [50, 69.99])->count();
+        $missedCount = $compRows->where('mastery_score', '<', 50)->count();
+
+        // Récupérer les séances d'étude réelles et tentatives de test
+        $studySessions = DB::table('study_sessions')
+            ->leftJoin('subjects', 'study_sessions.subject_id', '=', 'subjects.id')
+            ->where('student_user_id', $student->id)
+            ->orderByDesc('started_at')
+            ->limit(10)
+            ->select('study_sessions.*', 'subjects.name as subject_name')
+            ->get();
+
+        $attempts = DB::table('assessment_attempts')
+            ->join('assessments', 'assessment_attempts.assessment_id', '=', 'assessments.id')
+            ->where('student_user_id', $student->id)
+            ->where('status', 'submitted')
+            ->orderByDesc('submitted_at')
+            ->limit(10)
+            ->select('assessment_attempts.*', 'assessments.title as assessment_title')
+            ->get();
+
+        $fkCol = \Illuminate\Support\Facades\Schema::hasColumn('revision_tasks', 'revision_plan_id') ? 'revision_plan_id' : 'plan_id';
+        $completedTasksCount = DB::table('revision_tasks')
+            ->join('revision_plans', "revision_tasks.{$fkCol}", '=', 'revision_plans.id')
+            ->where('revision_plans.student_user_id', $student->id)
+            ->whereIn('revision_tasks.status', ['completed', 'done'])
+            ->count();
+
+        $hasData = ($compRows->count() > 0 || $studySessions->count() > 0 || $attempts->count() > 0 || $completedTasksCount > 0);
+
+        return view('student.history', compact(
+            'student',
+            'compRows',
+            'masteredCount',
+            'toReviewCount',
+            'missedCount',
+            'studySessions',
+            'attempts',
+            'completedTasksCount',
+            'hasData'
+        ));
     }
 
     public function calendar()

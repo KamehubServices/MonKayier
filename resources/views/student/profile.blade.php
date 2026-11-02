@@ -350,7 +350,7 @@
                 </div>
                 <div class="prof-user-meta">
                     <h2 class="prof-user-name">{{ $student->full_name }}</h2>
-                    <span class="prof-user-sub">{{ $student->class_name }} · Lycée de Tokoin (Lomé)</span>
+                    <span class="prof-user-sub">{{ $student->class_name }} · {{ $student->bio ?: 'Programme officiel MEPST Togo' }}</span>
                 </div>
             </div>
 
@@ -443,10 +443,24 @@
 
                     <div class="prof-pref-item">
                         <div class="ppi-info">
+                            <span class="ppi-name">Réinitialiser mon parcours (État vierge)</span>
+                            <span class="ppi-desc">Effacer les scores et repartir du Test de niveau initial</span>
+                        </div>
+                        <form method="POST" action="{{ route('student.reset') }}" onsubmit="return confirm('Confirmer la remise à zéro complète de ton parcours et de tes résultats ?');">
+                            @csrf
+                            <button type="submit" class="prof-logout-btn" style="cursor:pointer;">
+                                <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                                <span>Remettre à zéro</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="prof-pref-item">
+                        <div class="ppi-info">
                             <span class="ppi-name">Se déconnecter</span>
                             <span class="ppi-desc">Quitter la session sur cet appareil</span>
                         </div>
-                        <a href="/login" class="prof-logout-btn">
+                        <a href="/logout" class="prof-logout-btn">
                             <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                             <span>Déconnexion</span>
                         </a>

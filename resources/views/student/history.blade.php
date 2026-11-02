@@ -335,161 +335,140 @@
     <div class="hist-stats-grid">
         <div class="hist-stat-card">
             <div class="hsc-top">
-                <span class="hsc-label">Notions maîtrisées</span>
+                <span class="hsc-label">Compétences maîtrisées</span>
                 <div class="hsc-icon-badge" style="background:#ECFDF5;color:#065F46;">
                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
             </div>
-            <div class="hsc-val">24</div>
-            <div class="hsc-sub">Notions validées avec succès sur ton programme</div>
+            <div class="hsc-val">{{ $masteredCount ?? 0 }}</div>
+            <div class="hsc-sub">Domaines validés avec au moins 70% de maîtrise</div>
         </div>
 
         <div class="hist-stat-card">
             <div class="hsc-top">
-                <span class="hsc-label">À retravailler</span>
+                <span class="hsc-label">À consolider</span>
                 <div class="hsc-icon-badge" style="background:#FFFBEB;color:#B45309;">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                 </div>
             </div>
-            <div class="hsc-val" style="color:#B45309;">7</div>
+            <div class="hsc-val" style="color:#B45309;">{{ $toReviewCount ?? 0 }}</div>
             <div class="hsc-sub">Chapitres ciblés pour tes prochains rappels IA</div>
         </div>
 
         <div class="hist-stat-card">
             <div class="hsc-top">
-                <span class="hsc-label">Séances manquées</span>
+                <span class="hsc-label">Priorités urgentes</span>
                 <div class="hsc-icon-badge" style="background:#EFF6FF;color:#1D4ED8;">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 </div>
             </div>
-            <div class="hsc-val">2</div>
-            <div class="hsc-sub">Tu peux les reprendre à tout moment sans pénalité</div>
+            <div class="hsc-val">{{ $missedCount ?? 0 }}</div>
+            <div class="hsc-sub">Notions prioritaires identifiées lors du diagnostic</div>
         </div>
     </div>
 
     {{-- GRILLE PRINCIPALE --}}
     <div class="hist-main-grid">
 
-        {{-- COLONNE GAUCHE : DERNIÈRES SÉANCES --}}
+        {{-- COLONNE GAUCHE : DERNIÈRES SÉANCES & TESTS --}}
         <div class="hist-card">
-            <h3 class="hc-title">Mes dernières séances</h3>
+            <h3 class="hc-title">Mes dernières activités</h3>
             <div class="hist-session-list">
-
-                {{-- Séance 1 --}}
-                <div class="hist-session-item">
-                    <div class="hsi-left">
-                        <div class="hsi-icon">
-                            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                @if((!isset($attempts) || count($attempts) === 0) && (!isset($studySessions) || count($studySessions) === 0))
+                    <div style="background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:12px;padding:28px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                        <div style="width:42px;height:42px;border-radius:10px;background:#0E1022;color:#D4F25C;display:flex;align-items:center;justify-content:center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
                         </div>
-                        <div class="hsi-info">
-                            <h4 class="hsi-title">Limites de fonctions · discussion avec le cours</h4>
-                            <div class="hsi-meta">
-                                <span>Aujourd’hui</span>
-                                <span>·</span>
-                                <span class="hsi-meta-pill">25 min</span>
-                            </div>
+                        <div style="font-family:'Sora',sans-serif;font-size:14px;font-weight:800;color:#0E1022;">Historique vierge — Aucune séance enregistrée</div>
+                        <div style="font-size:12.5px;color:#64748B;max-width:380px;line-height:1.5;">
+                            Passe ton Test de niveau initial ou démarre ta première séance de révision pour suivre ta progression en temps réel.
                         </div>
+                        <a href="{{ route('student.test') }}" class="hsi-btn" style="background:#D4F25C;border-color:#0E1022;color:#0E1022;margin-top:4px;">
+                            <span>Passer le Test de niveau</span>
+                            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
                     </div>
-                    <a href="{{ route('student.assistant') }}" class="hsi-btn">
-                        <span>Reprendre</span>
-                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </a>
-                </div>
-
-                {{-- Séance 2 --}}
-                <div class="hist-session-item">
-                    <div class="hsi-left">
-                        <div class="hsi-icon" style="background:#0284c7;color:#FFFFFF;">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                        </div>
-                        <div class="hsi-info">
-                            <h4 class="hsi-title">Exercices de dérivation</h4>
-                            <div class="hsi-meta">
-                                <span>Hier</span>
-                                <span>·</span>
-                                <span class="hsi-meta-pill">Score 4/5</span>
-                                <span class="hsi-meta-pill">18 min</span>
+                @else
+                    @foreach($attempts as $att)
+                        <div class="hist-session-item">
+                            <div class="hsi-left">
+                                <div class="hsi-icon" style="background:#15803D;color:#D4F25C;">
+                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                </div>
+                                <div class="hsi-info">
+                                    <h4 class="hsi-title">{{ $att->assessment_title ?? 'Test de niveau général' }}</h4>
+                                    <div class="hsi-meta">
+                                        <span>{{ \Carbon\Carbon::parse($att->submitted_at ?? $att->created_at)->format('d/m/Y H:i') }}</span>
+                                        <span>·</span>
+                                        <span class="hsi-meta-pill">Score {{ $att->score }}/{{ $att->max_score }}</span>
+                                    </div>
+                                </div>
                             </div>
+                            <a href="{{ route('student.parcours') }}" class="hsi-btn">
+                                <span>Parcours</span>
+                                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </a>
                         </div>
-                    </div>
-                    <a href="{{ route('student.exercises') }}" class="hsi-btn">
-                        <span>Reprendre</span>
-                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </a>
-                </div>
+                    @endforeach
 
-                {{-- Séance 3 --}}
-                <div class="hist-session-item">
-                    <div class="hsi-left">
-                        <div class="hsi-icon" style="background:#15803D;color:#D4F25C;">
-                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        </div>
-                        <div class="hsi-info">
-                            <h4 class="hsi-title">Test de niveau · Mathématiques</h4>
-                            <div class="hsi-meta">
-                                <span>Lundi</span>
-                                <span>·</span>
-                                <span class="hsi-meta-pill">Terminé</span>
+                    @foreach($studySessions as $ss)
+                        <div class="hist-session-item">
+                            <div class="hsi-left">
+                                <div class="hsi-icon">
+                                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                </div>
+                                <div class="hsi-info">
+                                    <h4 class="hsi-title">Séance de révision · {{ $ss->subject_name ?? 'Cours officiel' }}</h4>
+                                    <div class="hsi-meta">
+                                        <span>{{ \Carbon\Carbon::parse($ss->started_at ?? $ss->created_at)->format('d/m/Y H:i') }}</span>
+                                        <span>·</span>
+                                        <span class="hsi-meta-pill">{{ max(1, (int) round(($ss->duration_seconds ?? 60) / 60)) }} min</span>
+                                    </div>
+                                </div>
                             </div>
+                            <a href="{{ route('student.chat', ['subject' => $ss->subject_id ?? '']) }}" class="hsi-btn">
+                                <span>Reprendre</span>
+                                <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </a>
                         </div>
-                    </div>
-                    <a href="{{ route('student.test') }}" class="hsi-btn">
-                        <span>Revoir</span>
-                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </a>
-                </div>
-
-                {{-- Séance 4 --}}
-                <div class="hist-session-item">
-                    <div class="hsi-left">
-                        <div class="hsi-icon" style="background:#4338CA;color:#FFFFFF;">
-                            <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                        </div>
-                        <div class="hsi-info">
-                            <h4 class="hsi-title">Lois de Newton · Quiz de Physique</h4>
-                            <div class="hsi-meta">
-                                <span>Dimanche</span>
-                                <span>·</span>
-                                <span class="hsi-meta-pill">Score 8/10</span>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="{{ route('student.exercises') }}" class="hsi-btn">
-                        <span>Reprendre</span>
-                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </a>
-                </div>
-
+                    @endforeach
+                @endif
             </div>
         </div>
 
         {{-- COLONNE DROITE : CARTE DES NOTIONS --}}
         <div class="hist-card">
-            <h3 class="hc-title">Carte des notions</h3>
-            
-            <div class="notions-chips-grid">
-                <span class="notion-tag notion-tag-mastered">Équations</span>
-                <span class="notion-tag notion-tag-mastered">Dérivées</span>
-                <span class="notion-tag notion-tag-mastered">Géométrie</span>
-                <span class="notion-tag notion-tag-inprogress">Suites</span>
-                <span class="notion-tag notion-tag-inprogress">Intégrales</span>
-                <span class="notion-tag notion-tag-review">Limites</span>
-                <span class="notion-tag notion-tag-review">Probabilités</span>
-                <span class="notion-tag notion-tag-inprogress">Newton</span>
-            </div>
+            <h3 class="hc-title">Carte des compétences</h3>
+
+            @if(!isset($compRows) || count($compRows) === 0)
+                <div style="background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:10px;padding:20px 16px;font-size:12.5px;color:#64748B;line-height:1.5;text-align:center;">
+                    Aucune compétence évaluée pour l'instant. Tes niveaux par matière s'afficheront ici dès la validation de ton Test de niveau.
+                </div>
+            @else
+                <div class="notions-chips-grid">
+                    @foreach($compRows as $cr)
+                        @php
+                            $score = (int) round($cr->mastery_score);
+                            $tagClass = $score >= 70 ? 'notion-tag-mastered' : ($score >= 50 ? 'notion-tag-inprogress' : 'notion-tag-review');
+                            $label = $cr->subject_name ?: str_replace('COMP-', '', $cr->code);
+                        @endphp
+                        <span class="notion-tag {{ $tagClass }}">{{ $label }} ({{ $score }}%)</span>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="notion-legend-row">
                 <div class="notion-legend-item">
                     <span class="notion-legend-dot" style="background:#10B981;"></span>
-                    <span>Maîtrisé</span>
+                    <span>Maîtrisé (70%+)</span>
                 </div>
                 <div class="notion-legend-item">
                     <span class="notion-legend-dot" style="background:#3B82F6;"></span>
-                    <span>En cours</span>
+                    <span>En cours (50-69%)</span>
                 </div>
                 <div class="notion-legend-item">
                     <span class="notion-legend-dot" style="background:#F59E0B;"></span>
-                    <span>À travailler</span>
+                    <span>À travailler (&lt;50%)</span>
                 </div>
             </div>
         </div>

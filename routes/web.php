@@ -18,10 +18,14 @@ Route::get('/', function () {
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
+Route::post('/login', [StudentController::class, 'handleLogin'])->name('login.submit');
 
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
+Route::post('/register', [StudentController::class, 'handleRegister'])->name('register.submit');
+
+Route::get('/logout', [StudentController::class, 'handleLogout'])->name('logout');
 
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
@@ -40,6 +44,7 @@ Route::get('/otp', function () {
 Route::get('/onboarding/student', function () {
     return view('auth.onboarding-student');
 })->name('onboarding.student');
+Route::post('/onboarding/student', [StudentController::class, 'handleOnboardingStudent'])->name('onboarding.student.submit');
 
 Route::get('/onboarding/teacher', function () {
     return view('auth.onboarding-teacher');
@@ -118,6 +123,7 @@ Route::prefix('student')->group(function () {
     // 12. Profil et paramètres élève
     Route::get('/profile', [StudentController::class, 'profile'])->name('student.profile');
     Route::post('/profile', [StudentController::class, 'updateProfile'])->name('student.profile.update');
+    Route::post('/reset-data', [StudentController::class, 'resetStudentData'])->name('student.reset');
 
     // 13. Notifications élève
     Route::get('/notifications', [StudentController::class, 'notifications'])->name('student.notifications');

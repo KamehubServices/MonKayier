@@ -26,7 +26,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span style="color: var(--auth-text-muted);">Contexte pays :</span>
-                    <span style="font-weight: 600; color: #1E293B;">Togo (TG) 🇹🇬</span>
+                    <span style="font-weight: 600; color: #1E293B;">Togo (TG) — MEPST</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span style="color: var(--auth-text-muted);">Type d'opération :</span>
@@ -58,11 +58,11 @@
     const secondaryBtn = document.getElementById('btn-success-secondary');
 
     if (type === 'student') {
-        titleEl.textContent = "Profil Élève finalisé !";
-        descEl.textContent = "Ton parcours d'apprentissage, tes matières et tes objectifs d'examen ont été configurés.";
-        opEl.textContent = "Onboarding Élève validé";
-        primaryBtn.textContent = "Accéder à mon tableau de bord";
-        primaryBtn.href = "/student/dashboard";
+        titleEl.textContent = "Profil Élève créé — Place au Test de niveau !";
+        descEl.textContent = "Pour construire ton parcours d'études sur mesure à partir d'une page vierge, la première étape obligatoire est ton Test de niveau initial.";
+        opEl.textContent = "Onboarding Élève validé · Calibration requise";
+        primaryBtn.textContent = "Passer mon Test de niveau initial";
+        primaryBtn.href = "/student/test-niveau?first_time=1";
     } else if (type === 'teacher') {
         titleEl.textContent = "Espace Enseignant prêt !";
         descEl.textContent = "Votre première classe a été créée avec vos matières d'enseignement.";

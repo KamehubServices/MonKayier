@@ -2726,10 +2726,14 @@ body.page-test-niveau .lay .w {
             <div class="wizard-step-pct" id="wizardStepPct">
                 20%
             </div>
+            @if(empty($isFirstTime))
             <a href="/student/parcours" class="btn-thb-exit" onclick="return confirm('Voulez-vous quitter le test de niveau et retourner au tableau de bord ?')" title="Quitter le test">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 <span>Quitter</span>
             </a>
+            @else
+            <span style="font-size:11.5px;font-weight:800;background:#FEF9C3;color:#854D0E;border:1px solid #FDE047;padding:4px 10px;border-radius:6px;">Étape initiale obligatoire</span>
+            @endif
         </div>
     </header>
 
@@ -2752,6 +2756,18 @@ body.page-test-niveau .lay .w {
     {{-- ========================================================================= --}}
     <div id="stepPane1" class="wizard-step-pane active">
         <div class="wizard-card-container">
+            @if(!empty($isFirstTime) || request('first_time'))
+            <div style="background:#0E1022;color:#FFFFFF;border-radius:12px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #1E293B;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:8px;background:#D4F25C;color:#0E1022;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0;">01</div>
+                    <div>
+                        <div style="font-size:13.5px;font-weight:850;color:#D4F25C;">Bienvenue {{ $student->display_name ?? 'sur MonKayier' }} — Première étape de ton espace élève</div>
+                        <div style="font-size:12px;color:#CBD5E1;margin-top:2px;">Ton profil démarre vierge. Ce diagnostic initial va déterminer ton jalon de départ et l'ordre de tes chapitres sur ton Parcours.</div>
+                    </div>
+                </div>
+                <span style="font-size:11px;font-weight:800;background:rgba(212,242,92,0.14);color:#D4F25C;padding:4px 9px;border-radius:6px;white-space:nowrap;">Parcours vierge prêt à calibrer</span>
+            </div>
+            @endif
             <div class="wizard-step-header">
                 <div class="wizard-step-badge">Calibrage Pédagogique · Étape 1 / 5</div>
                 <h1 class="wizard-step-title">Quelle est votre situation académique en Terminale ?</h1>
@@ -3696,8 +3712,8 @@ function proceedDirectlyToParcours() {
 }
 
 function goToPersonalizedParcours() {
-    const score = lastScoreResult ? lastScoreResult.bac_score : '13.5';
-    const mention = lastScoreResult ? lastScoreResult.mention : 'Mention Assez Bien';
+    const score = lastScoreResult ? lastScoreResult.bac_score : '0.0';
+    const mention = lastScoreResult ? lastScoreResult.mention : 'Calibré';
     const reliability = lastScoreResult ? lastScoreResult.reliability : '82';
     const p = new URLSearchParams({
         revealed: '1',

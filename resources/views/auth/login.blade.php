@@ -37,18 +37,34 @@
 
 @push('scripts')
 <script>
-    function handleLogin(e) {
+    async function handleLogin(e) {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim().toLowerCase();
+        const password = document.getElementById('login-password').value;
         const btn = document.getElementById('btn-login');
         btn.textContent = "Envoi du code OTP...";
         btn.style.opacity = "0.75";
         btn.disabled = true;
 
-        setTimeout(() => {
-            // Parcours d'authentification : passage obligatoire par le code OTP avant la confirmation
-            window.location.href = '/verify-email?type=login&email=' + encodeURIComponent(email);
-        }, 350);
+        try {
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ email: email, password: password })
+            });
+            const data = await res.json();
+            if (data && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+        } catch (err) {
+            // Fallback
+        }
+        window.location.href = '/verify-email?type=login&email=' + encodeURIComponent(email);
     }
 </script>
 @endpush

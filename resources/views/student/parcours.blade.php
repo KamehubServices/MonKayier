@@ -1101,8 +1101,8 @@ html, body {
             <button type="button" class="nav-arrow-btn" onclick="scrollDragonTrack(-480)" title="Défiler à gauche" aria-label="Défiler à gauche">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
-            <button type="button" class="nav-target-btn" onclick="centerOnActiveNode()" title="Centrer sur l'étape 05">
-                Étape 05
+            <button type="button" class="nav-target-btn" onclick="centerOnActiveNode()" title="Centrer sur l'étape active">
+                Étape {{ sprintf('%02d', $activeNode['step'] ?? 1) }}
             </button>
             <button type="button" class="nav-arrow-btn" onclick="scrollDragonTrack(480)" title="Défiler à droite" aria-label="Défiler à droite">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -1151,6 +1151,33 @@ html, body {
         <div class="dragon-scroll-track" id="dragonScrollTrack">
             <div class="dragon-path-stage">
                 
+                @php
+                    $activeStepNumber = (int) ($activeNode['step'] ?? 1);
+                    $bezierSegments = [
+                        'C 300,140 300,140 400,140',
+                        'C 500,140 500,300 600,300',
+                        'C 700,300 700,150 800,150',
+                        'C 900,150 900,290 1000,290',
+                        'C 1100,290 1100,150 1200,150',
+                        'C 1300,150 1300,300 1400,300',
+                        'C 1500,300 1500,150 1600,150',
+                        'C 1700,150 1700,290 1800,290',
+                        'C 1900,290 1900,150 2000,150',
+                        'C 2100,150 2100,300 2200,300',
+                        'C 2300,300 2300,150 2400,150',
+                        'C 2500,150 2500,290 2600,290',
+                        'C 2700,290 2700,150 2800,150',
+                        'C 2900,150 2900,280 3000,280',
+                        'C 3120,280 3120,200 3240,200',
+                    ];
+                    $completedSegments = array_slice($bezierSegments, 0, max(0, $activeStepNumber - 1));
+                    $completedPathD = count($completedSegments) > 0
+                        ? ('M 200,220 ' . implode(' ', $completedSegments))
+                        : 'M 195,220 L 200,220';
+                    $deskX = (int) ($activeNode['x'] ?? 200);
+                    $deskY = (int) ($activeNode['y'] ?? 220) - 38;
+                @endphp
+
                 {{-- Tracé SVG de la courbe de dragon serpentant en zig-zag --}}
                 <svg width="3500" height="440" style="position: absolute; left: 0; top: 0; pointer-events: none; z-index: 4;">
                     <defs>
@@ -1169,8 +1196,8 @@ html, body {
                     <path d="M 200,220 C 300,140 300,140 400,140 C 500,140 500,300 600,300 C 700,300 700,150 800,150 C 900,150 900,290 1000,290 C 1100,290 1100,150 1200,150 C 1300,150 1300,300 1400,300 C 1500,300 1500,150 1600,150 C 1700,150 1700,290 1800,290 C 1900,290 1900,150 2000,150 C 2100,150 2100,300 2200,300 C 2300,300 2300,150 2400,150 C 2500,150 2500,290 2600,290 C 2700,290 2700,150 2800,150 C 2900,150 2900,280 3000,280 C 3120,280 3120,200 3240,200" 
                           fill="none" stroke="url(#dragonRoadRemainingGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
 
-                    {{-- Portion franchie par l'élève (du départ jusqu'au jalon 5 actif à x=1000, y=290) --}}
-                    <path d="M 200,220 C 300,140 300,140 400,140 C 500,140 500,300 600,300 C 700,300 700,150 800,150 C 900,150 900,290 1000,290" 
+                    {{-- Portion franchie par l'élève (dynamique selon le jalon actif) --}}
+                    <path d="{{ $completedPathD }}" 
                           fill="none" stroke="url(#dragonRoadCompletedGrad)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
 
                     {{-- Ligne centrale pointillée --}}
@@ -1178,14 +1205,14 @@ html, body {
                           fill="none" stroke="#94A3B8" stroke-width="3" stroke-dasharray="8 8" stroke-linecap="round"/>
 
                     {{-- Écailles illuminées sur la portion validée --}}
-                    <path d="M 200,220 C 300,140 300,140 400,140 C 500,140 500,300 600,300 C 700,300 700,150 800,150 C 900,150 900,290 1000,290" 
+                    <path d="{{ $completedPathD }}" 
                           fill="none" stroke="#D4F25C" stroke-width="3.5" stroke-dasharray="8 8" stroke-linecap="round"/>
                 </svg>
 
                 {{-- Personnage en course 3D fluide et réaliste --}}
                 <div id="dragonRunnerFigure" style="position: absolute; left: 200px; top: 220px; z-index: 25; transform: translate(-50%, -100%); pointer-events: none;">
                     <div id="runnerTag" class="runner-speech-bubble">
-                        En route vers le jalon 05...
+                        En route vers le jalon {{ sprintf('%02d', $activeStepNumber) }}...
                     </div>
                     <div id="runnerTiltWrapper" class="runner-tilt-wrapper">
                         <div class="runner-body-bounce" id="runnerBounceBox">
@@ -1196,7 +1223,7 @@ html, body {
                 </div>
 
                 {{-- Table d'études avec bulle au-dessus du personnage --}}
-                <div id="dragonStudyDeskSetup" style="position: absolute; left: 1000px; top: 252px; transform: translate(-50%, -100%); z-index: 28; display: none; flex-direction: column; align-items: center; pointer-events: none;">
+                <div id="dragonStudyDeskSetup" style="position: absolute; left: {{ $deskX }}px; top: {{ $deskY }}px; transform: translate(-50%, -100%); z-index: 28; display: none; flex-direction: column; align-items: center; pointer-events: none;">
                     <div class="study-desk-pill">
                         Prêt pour le BAC !
                     </div>
@@ -1329,8 +1356,10 @@ html, body {
 {{-- 3. LOGIQUE JAVASCRIPT : ANIMATION RÉALISTE & DÉFILEMENT DU PARCOURS       --}}
 {{-- ========================================================================= --}}
 <script>
-// Points de passage le long du dragon (du jalon 1 au jalon 5)
-const runWaypoints = [
+// Points de passage dynamiques le long du dragon jusqu'au jalon actif (calculé par le Test de niveau)
+const targetActiveStep = {{ (int) ($activeNode['step'] ?? 1) }};
+const allDragonWaypoints = [
+    { x: 145, y: 220, tilt: 0 },
     { x: 200, y: 220, node: 1, tilt: -12 },
     { x: 300, y: 170, tilt: -18 },
     { x: 400, y: 140, node: 2, tilt: 0 },
@@ -1339,8 +1368,32 @@ const runWaypoints = [
     { x: 700, y: 220, tilt: -18 },
     { x: 800, y: 150, node: 4, tilt: 0 },
     { x: 900, y: 220, tilt: 16 },
-    { x: 1000, y: 290, node: 5, tilt: 0 }
+    { x: 1000, y: 290, node: 5, tilt: 0 },
+    { x: 1100, y: 220, tilt: -16 },
+    { x: 1200, y: 150, node: 6, tilt: 0 },
+    { x: 1300, y: 225, tilt: 16 },
+    { x: 1400, y: 300, node: 7, tilt: 0 },
+    { x: 1500, y: 225, tilt: -16 },
+    { x: 1600, y: 150, node: 8, tilt: 0 },
+    { x: 1700, y: 220, tilt: 16 },
+    { x: 1800, y: 290, node: 9, tilt: 0 },
+    { x: 1900, y: 220, tilt: -16 },
+    { x: 2000, y: 150, node: 10, tilt: 0 },
+    { x: 2100, y: 225, tilt: 16 },
+    { x: 2200, y: 300, node: 11, tilt: 0 },
+    { x: 2300, y: 225, tilt: -16 },
+    { x: 2400, y: 150, node: 12, tilt: 0 },
+    { x: 2500, y: 220, tilt: 16 },
+    { x: 2600, y: 290, node: 13, tilt: 0 },
+    { x: 2700, y: 220, tilt: -16 },
+    { x: 2800, y: 150, node: 14, tilt: 0 },
+    { x: 2900, y: 215, tilt: 14 },
+    { x: 3000, y: 280, node: 15, tilt: 0 },
+    { x: 3120, y: 240, tilt: -12 },
+    { x: 3240, y: 200, node: 16, tilt: 0 }
 ];
+const stopIdx = allDragonWaypoints.findIndex(w => w.node === targetActiveStep);
+const runWaypoints = stopIdx >= 1 ? allDragonWaypoints.slice(0, stopIdx + 1) : allDragonWaypoints.slice(0, 2);
 
 let isRunningJourney = false;
 let journeyAnimFrame = null;
@@ -1509,9 +1562,9 @@ function handleNodeClick(status, subjectId, resourceId, title, step) {
         const status = urlParams.get('status') || 'nouveau';
         const period = urlParams.get('period') || 'milieu';
         const ambition = urlParams.get('ambition') || 'mention';
-        const score = urlParams.get('score') || '13.5';
-        const mention = urlParams.get('mention') || 'Mention Assez Bien';
-        const reliability = urlParams.get('reliability') || '82';
+        const score = urlParams.get('score') || '{{ $calibData["combined_score"] ?? 0 }}';
+        const mention = urlParams.get('mention') || '{{ $calibData["mention"] ?? "Calibré" }}';
+        const reliability = urlParams.get('reliability') || '{{ $calibData["reliability"] ?? 82 }}';
         const hasReports = (urlParams.get('has_reports') === '1' || parseInt(reliability) >= 95);
 
         // Profil labels
@@ -1652,18 +1705,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="cpm-kpis-grid">
             <div class="cpm-kpi-card">
                 <span class="cpm-kpi-label">Diagnostic Initial</span>
-                <div class="cpm-kpi-val"><span id="modalScoreVal">13.5</span> <small>/ 20</small></div>
-                <span class="cpm-kpi-sub" id="modalMentionVal">Mention Assez Bien</span>
+                <div class="cpm-kpi-val"><span id="modalScoreVal">{{ $calibData['combined_score'] ?? 0 }}</span> <small>/ 20</small></div>
+                <span class="cpm-kpi-sub" id="modalMentionVal">{{ $calibData['mention'] ?? 'Calibré' }}</span>
             </div>
             <div class="cpm-kpi-card">
                 <span class="cpm-kpi-label">Fiabilité du Calibrage</span>
-                <div class="cpm-kpi-val" style="color: #059669;"><span id="modalReliabilityVal">82</span>%</div>
+                <div class="cpm-kpi-val" style="color: #059669;"><span id="modalReliabilityVal">{{ $calibData['reliability'] ?? 82 }}</span>%</div>
                 <span class="cpm-kpi-sub" id="modalReliabilitySub">Basé sur test QCM</span>
             </div>
             <div class="cpm-kpi-card">
                 <span class="cpm-kpi-label">Point d'Ancrage Actif</span>
-                <div class="cpm-kpi-val" style="color: #0E1022;">Étape 05</div>
-                <span class="cpm-kpi-sub">Limites & Continuité (Maths)</span>
+                <div class="cpm-kpi-val" style="color: #0E1022;">Étape {{ sprintf('%02d', $activeNode['step'] ?? 1) }}</div>
+                <span class="cpm-kpi-sub">{{ $activeNode['title'] ?? 'Fondations' }} ({{ $activeNode['subject'] ?? 'Général' }})</span>
             </div>
         </div>
 
@@ -1672,15 +1725,15 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="cpm-step-item step-done">
                 <div class="cpm-si-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                 <div class="cpm-si-text">
-                    <strong>4 Jalons Fondamentaux Validés</strong>
-                    <span>Bases acquises (Fonctions numériques, Suites, Cinématique, Méthode)</span>
+                    <strong>{{ $completedNodesCount ?? 0 }} {{ ($completedNodesCount ?? 0) > 1 ? 'Jalons Fondamentaux Validés' : 'Jalon Fondamental Validé' }}</strong>
+                    <span>{{ ($completedNodesCount ?? 0) > 0 ? 'Acquis validés par votre diagnostic initial' : 'Départ depuis les fondations pour consolider toutes les bases' }}</span>
                 </div>
             </div>
             <div class="cpm-step-item step-current">
-                <div class="cpm-si-icon">05</div>
+                <div class="cpm-si-icon">{{ sprintf('%02d', $activeNode['step'] ?? 1) }}</div>
                 <div class="cpm-si-text">
                     <strong>Étape Active Actuelle (Priorité 1)</strong>
-                    <span>Limites, Asymptotes & Continuité · Prêt à démarrer</span>
+                    <span>{{ $activeNode['title'] ?? 'Chapitre actif' }} · Prêt à démarrer</span>
                 </div>
             </div>
             <div class="cpm-step-item step-locked">
@@ -1688,7 +1741,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 </div>
                 <div class="cpm-si-text">
-                    <strong>11 Jalons Suivants Cadenassés</strong>
+                    <strong>{{ max(0, 16 - ($activeNode['step'] ?? 1)) }} Jalons Suivants Cadenassés</strong>
                     <span>Déblocage séquentiel automatique au fil de vos réussites</span>
                 </div>
             </div>

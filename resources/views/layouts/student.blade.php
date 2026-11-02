@@ -1146,6 +1146,437 @@
             color: #D4F25C;
             border-color: #0E1022;
         }
+
+        /* =========================================================
+           MODE APPEL VOCAL CONTINU MAINS-LIBRES (STYLE CHATGPT VOICE)
+           & BULLE CONTEXTUELLE DE SÉLECTION DU COURS
+           ========================================================= */
+        .mk-voice-call-dock {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 14px;
+            margin-bottom: 6px;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #0E1022 0%, #1E1B4B 100%);
+            color: #FFFFFF;
+            border: 1.5px solid rgba(212, 242, 92, 0.35);
+            box-shadow: 0 12px 28px -8px rgba(14, 16, 34, 0.45);
+            position: relative;
+            flex-shrink: 0;
+        }
+        .mk-voice-call-dock.is-active {
+            display: flex;
+        }
+        .mk-voice-orb-container {
+            position: relative;
+            width: 78px;
+            height: 78px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .mk-voice-orb-halo {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 242, 92, 0.45) 0%, rgba(79, 70, 229, 0) 70%);
+            animation: mkOrbPulse 1.8s infinite ease-in-out;
+        }
+        .mk-voice-orb-core {
+            position: relative;
+            z-index: 2;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #4F46E5;
+            border: 2.5px solid #D4F25C;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.6);
+        }
+        .mk-voice-call-dock[data-state="listening"] .mk-voice-orb-core {
+            background: #EF4444;
+            border-color: #FCA5A5;
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.75);
+            transform: scale(1.07);
+        }
+        .mk-voice-call-dock[data-state="thinking"] .mk-voice-orb-core {
+            background: #F59E0B;
+            border-color: #FDE68A;
+            box-shadow: 0 0 22px rgba(245, 158, 11, 0.65);
+        }
+        .mk-voice-call-dock[data-state="speaking"] .mk-voice-orb-core {
+            background: #10B981;
+            border-color: #D4F25C;
+            box-shadow: 0 0 26px rgba(16, 185, 129, 0.8);
+            animation: mkOrbSpeakWave 0.9s infinite alternate ease-in-out;
+        }
+        @keyframes mkOrbPulse {
+            0%, 100% { transform: scale(0.95); opacity: 0.55; }
+            50% { transform: scale(1.28); opacity: 0.95; }
+        }
+        @keyframes mkOrbSpeakWave {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1.12); }
+        }
+        .mk-selection-popover {
+            position: fixed;
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: #0E1022;
+            color: #FFFFFF;
+            padding: 6px 8px;
+            border-radius: 10px;
+            border: 1.5px solid #D4F25C;
+            box-shadow: 0 10px 25px rgba(14, 16, 34, 0.35);
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+        }
+        .mk-selection-popover.is-visible {
+            display: inline-flex;
+        }
+        .mk-selection-popover button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 7px;
+            padding: 4px 9px;
+            font-size: 11.5px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .mk-selection-popover button:hover {
+            background: #D4F25C;
+            color: #0E1022;
+            border-color: #D4F25C;
+        }
+
+        /* =========================================================
+           BARRE D'OUTILS REPLIABLE : SUGGESTIONS IA & CLAVIER SCIENTIFIQUE (fx)
+           Permet d'afficher ou masquer à la demande les suggestions et les symboles
+           ========================================================= */
+        .mk-chat-tools-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 2px 0;
+            flex-shrink: 0 !important;
+            user-select: none;
+        }
+        .mk-chat-tools-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .mk-tool-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid var(--immersion-card-border, #CBD5E1);
+            background: var(--immersion-card, #F8FAFC);
+            color: var(--immersion-subtext, #475569);
+            line-height: 1.2;
+            box-shadow: none !important;
+        }
+        .mk-tool-toggle-btn:hover {
+            border-color: #0E1022;
+            color: #0E1022;
+            background: #FFFFFF;
+        }
+        .mk-tool-toggle-btn.is-active {
+            background: #0E1022;
+            color: #FFFFFF;
+            border-color: #0E1022;
+        }
+        .mk-tool-toggle-btn.is-active .mk-tool-badge {
+            background: #D4F25C;
+            color: #0E1022;
+        }
+        .mk-tool-toggle-btn.is-active svg.mk-tool-icon {
+            stroke: #D4F25C;
+        }
+        .mk-tool-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 5px;
+            border-radius: 999px;
+            font-size: 9.5px;
+            font-weight: 850;
+            background: #E2E8F0;
+            color: #0E1022;
+            line-height: 1.1;
+        }
+        .mk-tool-fx-badge {
+            font-family: 'Sora', Georgia, serif;
+            font-style: italic;
+            font-weight: 850;
+            font-size: 11px;
+            padding: 0 4px;
+            border-radius: 4px;
+            background: rgba(79, 70, 229, 0.12);
+            color: #4F46E5;
+        }
+        .mk-tool-toggle-btn.is-active .mk-tool-fx-badge {
+            background: #D4F25C;
+            color: #0E1022;
+        }
+        .mk-tool-chevron {
+            transition: transform 0.2s ease;
+            opacity: 0.75;
+        }
+        .mk-tool-toggle-btn.is-active .mk-tool-chevron {
+            transform: rotate(180deg);
+            opacity: 1;
+        }
+
+        /* Tiroir des Suggestions Revisitées */
+        .mk-suggestions-drawer {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--immersion-card, #F8FAFC);
+            border: 1px solid var(--immersion-card-border, #E2E8F0);
+            border-radius: 12px;
+            padding: 8px 10px;
+            flex-shrink: 0 !important;
+            max-height: 138px;
+            overflow-y: auto;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mk-suggestions-drawer.is-collapsed {
+            display: none !important;
+        }
+        .mk-suggestions-drawer::-webkit-scrollbar {
+            width: 4px;
+        }
+        .mk-suggestions-drawer::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .mk-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px dashed var(--immersion-card-border, #E2E8F0);
+        }
+        .mk-drawer-title {
+            font-size: 10px;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--immersion-subtext, #64748B);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .mk-drawer-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--immersion-subtext, #64748B);
+            font-size: 10.5px;
+            font-weight: 750;
+            cursor: pointer;
+            padding: 1px 6px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.15s ease;
+        }
+        .mk-drawer-close-btn:hover {
+            background: rgba(14, 16, 34, 0.08);
+            color: var(--immersion-text, #0E1022);
+        }
+
+        /* Grille de puces de suggestions modernes */
+        .mk-suggestions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .mk-sug-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--immersion-pane, #FFFFFF);
+            border: 1px solid var(--immersion-card-border, #CBD5E1);
+            color: var(--immersion-text, #0E1022);
+            font-size: 11.5px;
+            font-weight: 650;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: left;
+            line-height: 1.3;
+            box-shadow: 0 1px 2px rgba(14, 16, 34, 0.03) !important;
+            max-width: 100%;
+        }
+        .mk-sug-pill:hover {
+            border-color: #0E1022;
+            background: #0E1022;
+            color: #FFFFFF;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(14, 16, 34, 0.12) !important;
+        }
+        .mk-sug-pill .mk-sug-arrow {
+            font-size: 11px;
+            color: #64748B;
+            font-weight: 800;
+            transition: transform 0.15s ease, color 0.15s ease;
+            flex: none;
+        }
+        .mk-sug-pill:hover .mk-sug-arrow {
+            color: #D4F25C;
+            transform: translateX(2px);
+        }
+        .mk-sug-pill--quiz {
+            background: #D4F25C !important;
+            border: 1.5px solid #0E1022 !important;
+            color: #0E1022 !important;
+            font-weight: 850 !important;
+        }
+        .mk-sug-pill--quiz:hover {
+            background: #0E1022 !important;
+            color: #D4F25C !important;
+            border-color: #0E1022 !important;
+        }
+        .mk-sug-pill--quiz .mk-sug-quiz-tag {
+            background: #0E1022;
+            color: #D4F25C;
+            font-size: 9.5px;
+            font-weight: 850;
+            padding: 1px 5px;
+            border-radius: 4px;
+            letter-spacing: 0.02em;
+        }
+        .mk-sug-pill--quiz:hover .mk-sug-quiz-tag {
+            background: #D4F25C;
+            color: #0E1022;
+        }
+
+        /* Tiroir du Clavier Scientifique Repliable (Masqué par défaut pour libérer l'écran) */
+        .mk-scikbd-drawer {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--immersion-card, #F8FAFC);
+            border: 1.5px solid var(--immersion-card-border, #CBD5E1);
+            border-radius: 12px;
+            padding: 8px 10px;
+            flex-shrink: 0 !important;
+            box-shadow: 0 6px 16px -6px rgba(14, 16, 34, 0.1);
+            animation: dockMenuPop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mk-scikbd-drawer.is-collapsed {
+            display: none !important;
+        }
+        .mk-scikbd-tabs {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mk-scikbd-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--immersion-subtext, #64748B);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .mk-scikbd-tab:hover {
+            color: var(--immersion-text, #0E1022);
+            background: rgba(14, 16, 34, 0.05);
+        }
+        .mk-scikbd-tab.is-active {
+            background: #0E1022;
+            color: #D4F25C;
+        }
+        .mk-scikbd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+            gap: 4px;
+        }
+        .mk-scikbd-key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 28px;
+            padding: 0 6px;
+            background: var(--immersion-pane, #FFFFFF);
+            border: 1px solid var(--immersion-card-border, #CBD5E1);
+            border-bottom: 2px solid #94A3B8;
+            border-radius: 7px;
+            color: var(--immersion-text, #0E1022);
+            font-family: 'Sora', sans-serif;
+            font-size: 11.5px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+            box-shadow: none !important;
+        }
+        .mk-scikbd-key:hover {
+            background: #0E1022;
+            color: #D4F25C;
+            border-color: #0E1022;
+            border-bottom-color: #0E1022;
+            transform: translateY(-1px);
+        }
+        .mk-scikbd-key:active {
+            transform: translateY(1px);
+            border-bottom-width: 1px;
+        }
+        /* Bouton fx rapide intégré dans la barre de saisie */
+        .immersion-fx-btn {
+            background: var(--immersion-card, #F1F5F9);
+            border: 1px solid var(--immersion-card-border, #CBD5E1);
+            color: #4F46E5;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex: none;
+            font-family: 'Sora', Georgia, serif;
+            font-style: italic;
+            font-weight: 850;
+            font-size: 13px;
+            transition: all 0.15s ease;
+            box-shadow: none !important;
+        }
+        .immersion-fx-btn:hover,
+        .immersion-fx-btn.is-active {
+            background: #0E1022;
+            color: #D4F25C;
+            border-color: #0E1022;
+        }
     </style>
     @stack('styles')
 </head>
@@ -1826,6 +2257,178 @@ window.mkInitSplitResizers = function() {
             }
         });
     });
+};
+
+// =========================================================
+// BULLE CONTEXTUELLE DE SÉLECTION DU COURS ("EXPLIQUER CE PASSAGE")
+// =========================================================
+window.mkInitSelectionAssistant = function() {
+    if (document.getElementById('mkSelectionPopover')) return;
+
+    const pop = document.createElement('div');
+    pop.id = 'mkSelectionPopover';
+    pop.className = 'mk-selection-popover';
+    pop.innerHTML = `
+        <button type="button" data-action="explain" title="Demander au Tuteur IA d'expliquer ce passage avec une analogie simple">Expliquer simplement</button>
+        <button type="button" data-action="example" title="Demander un exemple concret sur ce passage">Exemple concret</button>
+        <button type="button" data-action="listen" title="Écouter ce passage avec la voix neurale">Écouter</button>
+    `;
+    document.body.appendChild(pop);
+
+    let currentSelectionText = '';
+
+    const hidePopover = () => {
+        pop.classList.remove('is-visible');
+    };
+
+    pop.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = e.target.closest('button');
+        if (!btn || !currentSelectionText) return;
+        const action = btn.getAttribute('data-action');
+        const snippet = currentSelectionText.length > 260 ? currentSelectionText.substring(0, 260) + '...' : currentSelectionText;
+
+        if (action === 'listen') {
+            window.mkSpeakHuman(snippet);
+            hidePopover();
+            return;
+        }
+
+        const prompt = (action === 'explain')
+            ? `Explique-moi très simplement et avec une analogie ce passage du cours : « ${snippet} »`
+            : `Donne-moi un exemple concret et corrigé pour bien comprendre ce passage : « ${snippet} »`;
+
+        hidePopover();
+        window.getSelection().removeAllRanges();
+
+        if (typeof window.sendSuggestion === 'function') {
+            window.sendSuggestion(prompt);
+        } else if (typeof window.askBiblioPrompt === 'function') {
+            window.askBiblioPrompt(prompt);
+        } else if (typeof window.askTutorPrompt === 'function') {
+            window.askTutorPrompt(prompt);
+        }
+    });
+
+    document.addEventListener('mouseup', function(e) {
+        if (pop.contains(e.target)) return;
+        setTimeout(() => {
+            const sel = window.getSelection();
+            const text = sel ? sel.toString().trim() : '';
+            if (!text || text.length < 5) {
+                hidePopover();
+                return;
+            }
+
+            // Vérifier que la sélection se trouve dans une zone de cours ou d'exercice
+            const anchorNode = sel.anchorNode;
+            const elem = anchorNode ? (anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement) : null;
+            if (!elem || !elem.closest('#workshopLeftCol, #immersionCourseSheet, .course-sheet-container, .atelier-subject-pane')) {
+                hidePopover();
+                return;
+            }
+
+            currentSelectionText = text;
+            const range = sel.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) {
+                hidePopover();
+                return;
+            }
+
+            const top = Math.max(48, rect.top);
+            const left = Math.min(window.innerWidth - 160, Math.max(160, rect.left + rect.width / 2));
+            pop.style.top = `${top}px`;
+            pop.style.left = `${left}px`;
+            pop.classList.add('is-visible');
+        }, 20);
+    });
+
+    document.addEventListener('scroll', hidePopover, true);
+};
+
+// =========================================================
+// GESTIONNAIRE GLOBAL DES TIROIRS REPLIABLES (SUGGESTIONS & CLAVIER SCIENTIFIQUE fx)
+// =========================================================
+window.mkToggleChatDrawer = function(drawerType, prefix, forceState) {
+    const pfx = prefix || 'chat';
+    const sugDrawer = document.getElementById(pfx + 'SuggestionsDrawer');
+    const kbdDrawer = document.getElementById(pfx + 'SciKbdDrawer');
+    const sugBtn = document.getElementById(pfx + 'BtnToggleSug');
+    const kbdBtn = document.getElementById(pfx + 'BtnToggleKbd');
+    const fxInlineBtn = document.getElementById(pfx + 'FxInlineBtn');
+
+    if (drawerType === 'suggestions' && sugDrawer) {
+        const currentlyOpen = !sugDrawer.classList.contains('is-collapsed');
+        const nextOpen = (typeof forceState === 'boolean') ? forceState : !currentlyOpen;
+        sugDrawer.classList.toggle('is-collapsed', !nextOpen);
+        if (sugBtn) {
+            sugBtn.classList.toggle('is-active', nextOpen);
+            const labelSpan = sugBtn.querySelector('.mk-tool-state-text');
+            if (labelSpan) labelSpan.textContent = nextOpen ? 'Masquer idées' : 'Idées & Quiz';
+        }
+    } else if (drawerType === 'scikbd' && kbdDrawer) {
+        const currentlyOpen = !kbdDrawer.classList.contains('is-collapsed');
+        const nextOpen = (typeof forceState === 'boolean') ? forceState : !currentlyOpen;
+        kbdDrawer.classList.toggle('is-collapsed', !nextOpen);
+        if (kbdBtn) {
+            kbdBtn.classList.toggle('is-active', nextOpen);
+            const labelSpan = kbdBtn.querySelector('.mk-tool-state-text');
+            if (labelSpan) labelSpan.textContent = nextOpen ? 'Masquer clavier' : 'Clavier scientifique';
+        }
+        if (fxInlineBtn) {
+            fxInlineBtn.classList.toggle('is-active', nextOpen);
+        }
+    }
+};
+
+window.mkFilterSciKbd = function(tabBtn, category, gridId) {
+    const parentTabs = tabBtn ? tabBtn.closest('.mk-scikbd-tabs') : null;
+    if (parentTabs) {
+        parentTabs.querySelectorAll('.mk-scikbd-tab').forEach(b => b.classList.remove('is-active'));
+        tabBtn.classList.add('is-active');
+    }
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.querySelectorAll('.mk-scikbd-key').forEach(key => {
+        const cat = key.getAttribute('data-cat') || 'all';
+        if (category === 'all' || cat === category) {
+            key.style.display = 'inline-flex';
+        } else {
+            key.style.display = 'none';
+        }
+    });
+};
+
+window.mkCreateSuggestionPill = function(text, onClickFn) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mk-sug-pill';
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'mk-sug-arrow';
+    arrowSpan.textContent = '→';
+    btn.appendChild(textSpan);
+    btn.appendChild(arrowSpan);
+    if (typeof onClickFn === 'function') {
+        btn.onclick = onClickFn;
+    }
+    return btn;
+};
+
+window.mkInsertSymbolToInput = function(inputId, symbol) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || 0;
+    const val = el.value || '';
+    el.value = val.substring(0, start) + symbol + val.substring(end);
+    el.focus();
+    const newPos = start + symbol.length;
+    try { el.setSelectionRange(newPos, newPos); } catch (e) {}
+    if (window.mkAutoResizeTextarea) window.mkAutoResizeTextarea(el);
 };
 
 // =========================================================

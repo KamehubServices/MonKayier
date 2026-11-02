@@ -105,19 +105,43 @@
         document.getElementById('reg-submit-btn').textContent = cfg.btnText;
     }
 
-    function submitRegistration(e) {
+    async function submitRegistration(e) {
         e.preventDefault();
+        const nameInput = document.getElementById('reg-name');
         const emailInput = document.getElementById('reg-email');
+        const passInput = document.getElementById('reg-password');
+        const name = nameInput ? nameInput.value.trim() : '';
         const email = emailInput ? emailInput.value.trim() : '';
+        const password = passInput ? passInput.value : '';
         const btn = document.getElementById('reg-submit-btn');
         btn.textContent = "Création du compte...";
         btn.style.opacity = "0.75";
         btn.disabled = true;
 
-        setTimeout(() => {
-            // Parcours d'inscription : passage par la vérification OTP avant l'onboarding et confirmation
-            window.location.href = '/verify-email?type=register&role=' + encodeURIComponent(selectedRole) + (email ? '&email=' + encodeURIComponent(email) : '');
-        }, 400);
+        try {
+            const res = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password,
+                    role: selectedRole
+                })
+            });
+            const data = await res.json();
+            if (data && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+        } catch (err) {
+            // Fallback
+        }
+        window.location.href = '/verify-email?type=register&role=' + encodeURIComponent(selectedRole) + (email ? '&email=' + encodeURIComponent(email) : '');
     }
 </script>
 @endpush

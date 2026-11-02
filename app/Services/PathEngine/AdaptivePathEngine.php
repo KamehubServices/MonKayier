@@ -200,25 +200,49 @@ class AdaptivePathEngine
             }
         }
 
-        // 2. Récupération du score QCM
+        // 2. Récupération du score QCM réel (Zéro donnée fictive par défaut)
+        $hasTestAttempt = false;
         if ($testScore === null) {
             $lastAttempt = DB::table('assessment_attempts')
                 ->where('student_user_id', $studentId)
                 ->where('status', 'submitted')
                 ->orderBy('submitted_at', 'desc')
                 ->first();
-            $testScore = $lastAttempt ? (float) $lastAttempt->score : 13.5;
+            if ($lastAttempt) {
+                $testScore = (float) $lastAttempt->score;
+                $hasTestAttempt = true;
+            }
+        } else {
+            $hasTestAttempt = true;
         }
 
-        // 3. Combinaison pondérée
-        if ($hasReports && $reportAvg !== null) {
+        // Si l'élève n'a passé ni le Test de niveau ni déposé de bulletin : état 100% vierge
+        if (!$hasTestAttempt && !$hasReports) {
+            return [
+                'has_calibrated' => false,
+                'combined_score' => 0.0,
+                'test_score' => null,
+                'report_avg' => null,
+                'has_reports' => false,
+                'reliability' => 0,
+                'reliability_label' => 'Non calibré — Test de niveau requis',
+                'mention' => 'En attente du Test de niveau',
+            ];
+        }
+
+        // 3. Combinaison pondérée réelle
+        if ($hasTestAttempt && $hasReports && $reportAvg !== null) {
             $combinedScore = round(($testScore * 0.40) + ($reportAvg * 0.60), 1);
             $reliability = 95;
             $reliabilityLabel = 'Fiabilité 95% (Test QCM + Bulletins de classe)';
+        } elseif ($hasReports && $reportAvg !== null) {
+            $combinedScore = round($reportAvg, 1);
+            $reliability = 88;
+            $reliabilityLabel = 'Fiabilité 88% (Bulletins de classe)';
         } else {
-            $combinedScore = round($testScore, 1);
+            $combinedScore = round((float) $testScore, 1);
             $reliability = 82;
-            $reliabilityLabel = 'Fiabilité 82% (Test QCM seul)';
+            $reliabilityLabel = 'Fiabilité 82% (Test QCM diagnostique)';
         }
 
         // 4. Mention officielle
@@ -230,8 +254,9 @@ class AdaptivePathEngine
         else $mention = 'Renforcement impératif';
 
         return [
+            'has_calibrated' => true,
             'combined_score' => $combinedScore,
-            'test_score' => $testScore,
+            'test_score' => $testScore ?? $combinedScore,
             'report_avg' => $reportAvg,
             'has_reports' => $hasReports,
             'reliability' => $reliability,
@@ -428,16 +453,67 @@ class AdaptivePathEngine
             ],
         ];
 
-        // 1. Échelon de départ calibré par la note globale QCM + Bulletins
+        // 1. Échelon de départ calibré par la note globale QCM + Bulletins (0 si non calibré ou score < 7)
         $baseCompleted = 0;
-        if ($score >= 16) {
-            $baseCompleted = 6;
-        } elseif ($score >= 14) {
-            $baseCompleted = 4;
-        } elseif ($score >= 11) {
-            $baseCompleted = 2;
-        } else {
-            $baseCompleted = 0;
+        if (!empty($calib['has_calibrated'])) {
+            if ($score >= 16) {
+                $baseCompleted = 6;
+            } elseif ($score >= 14) {
+                $baseCompleted = 4;
+            } elseif ($score >= 12) {
+                $baseCompleted = 3;
+            } elseif ($score >= 10) {
+                $baseCompleted = 2;
+            } elseif ($score >= 7) {
+                $baseCompleted = 1;
+            } else {
+                $baseCompleted = 0;
+            }
+        }
+
+        // 1.b Ordonnancement dynamique des jalons selon les lacunes détectées au Test de niveau
+        $compRows = DB::table('student_competencies')
+            ->join('curriculum_objectives', 'student_competencies.objective_id', '=', 'curriculum_objectives.id')
+            ->where('student_user_id', $studentId)
+            ->select('curriculum_objectives.code', 'student_competencies.mastery_score')
+            ->get();
+
+        if ($compRows->isNotEmpty()) {
+            $subjectMastery = [];
+            foreach ($compRows as $cr) {
+                $code = str_replace('COMP-', '', strtoupper($cr->code));
+                if ($code === 'PHYSIQUE') $code = 'PCT';
+                $subjectMastery[$code] = (int) $cr->mastery_score;
+            }
+
+            // Conserver les coordonnées fixes (x, y) de la piste du dragon tout en priorisant les matières les plus faibles
+            $coordsByStep = [];
+            foreach ($curriculumMap as $st => $item) {
+                $coordsByStep[$st] = ['x' => $item['x'], 'y' => $item['y']];
+            }
+
+            // Trier les paliers par blocs pédagogiques (1..4, 5..8, 9..12, 13..15) pour placer la matière la plus urgente en tête du bloc actif
+            $blocks = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15]];
+            foreach ($blocks as $blockSteps) {
+                $blockItems = [];
+                foreach ($blockSteps as $st) {
+                    $blockItems[] = $curriculumMap[$st];
+                }
+                usort($blockItems, function ($a, $b) use ($subjectMastery) {
+                    $mA = $subjectMastery[$a['subject_code']] ?? 50;
+                    $mB = $subjectMastery[$b['subject_code']] ?? 50;
+                    if ($mA === $mB) {
+                        return ($b['coeff'] ?? 2) <=> ($a['coeff'] ?? 2);
+                    }
+                    return $mA <=> $mB; // Plus faible maîtrise en premier (priorité haute)
+                });
+                foreach ($blockSteps as $idx => $st) {
+                    $item = $blockItems[$idx];
+                    $item['x'] = $coordsByStep[$st]['x'];
+                    $item['y'] = $coordsByStep[$st]['y'];
+                    $curriculumMap[$st] = $item;
+                }
+            }
         }
 
         // 2. Récupération des cours validés dans la Révision IA (tâches de révision complétées)

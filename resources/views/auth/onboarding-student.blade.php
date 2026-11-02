@@ -28,14 +28,25 @@
             </div>
         </div>
 
+        <!-- 1b. Ta série -->
+        <div class="form-group">
+            <label class="form-label">Ta série</label>
+            <div class="chips-container" id="series-group">
+                <span class="chip selected" onclick="selectSingleChip(this, 'serie')">Série D</span>
+                <span class="chip" onclick="selectSingleChip(this, 'serie')">Série C</span>
+                <span class="chip" onclick="selectSingleChip(this, 'serie')">Série A4</span>
+            </div>
+        </div>
+
         <!-- 2. Tes matières -->
         <div class="form-group">
-            <label class="form-label">Tes matières</label>
+            <label class="form-label">Tes matières prioritaires</label>
             <div class="chips-container" id="subjects-group">
                 <span class="chip selected" onclick="toggleMultiChip(this)">Maths</span>
-                <span class="chip" onclick="toggleMultiChip(this)">Physique-Chimie</span>
-                <span class="chip" onclick="toggleMultiChip(this)">SVT</span>
+                <span class="chip selected" onclick="toggleMultiChip(this)">Physique-Chimie</span>
+                <span class="chip selected" onclick="toggleMultiChip(this)">SVT</span>
                 <span class="chip" onclick="toggleMultiChip(this)">Français</span>
+                <span class="chip" onclick="toggleMultiChip(this)">Philosophie</span>
                 <span class="chip" onclick="toggleMultiChip(this)">Anglais</span>
             </div>
         </div>
@@ -51,7 +62,7 @@
         </div>
 
         <button type="submit" id="btn-continue-student" class="btn-auth-primary" style="margin-top: 10px;">
-            Continuer
+            Continuer vers le Test de niveau
         </button>
     </form>
 @endsection
@@ -68,15 +79,46 @@
         el.classList.toggle('selected');
     }
 
-    function handleStudentOnboarding(e) {
+    async function handleStudentOnboarding(e) {
         e.preventDefault();
         const btn = document.getElementById('btn-continue-student');
         btn.textContent = "Finalisation de ton profil...";
         btn.disabled = true;
 
-        setTimeout(() => {
-            window.location.href = '/auth/success?type=student';
-        }, 350);
+        const levelEl = document.querySelector('#levels-group .chip.selected');
+        const serieEl = document.querySelector('#series-group .chip.selected');
+        const objEl = document.querySelector('#objectives-group .chip.selected');
+        const subjEls = document.querySelectorAll('#subjects-group .chip.selected');
+
+        const level = levelEl ? levelEl.textContent.trim() : 'Terminale';
+        const serieRaw = serieEl ? serieEl.textContent.trim().replace(/^Série\s+/i, '') : 'D';
+        const objective = objEl ? objEl.textContent.trim() : 'Préparer le BAC';
+        const subjects = Array.from(subjEls).map(el => el.textContent.trim());
+
+        try {
+            const res = await fetch('/onboarding/student', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    level: level,
+                    serie: serieRaw,
+                    objective: objective,
+                    subjects: subjects
+                })
+            });
+            const data = await res.json();
+            if (data && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+        } catch (err) {
+            // Fallback
+        }
+        window.location.href = '/auth/success?type=student';
     }
 </script>
 @endpush
