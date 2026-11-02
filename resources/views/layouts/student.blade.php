@@ -1684,7 +1684,7 @@
             <a href="/student/profile" style="display:flex;align-items:center;gap:10px;margin-top:auto;padding:12px;border-radius:12px;background:#F8FAFC;border:1px solid #E2E8F0;text-decoration:none;color:inherit;transition:all 0.2s ease;">
                 <div style="width:40px;height:40px;border-radius:50%;background:#D4F25C;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">{{ $currentStudent->initials ?? 'KM' }}</div>
                 <div style="line-height:1.3">
-                    <b>{{ $currentStudent->full_name ?? 'Kodjo Mensah' }}</b>
+                    <b>{{ $currentStudent->full_name ?? 'Mon profil' }}</b>
                     <div class="mu">{{ $currentStudent->class_name ?? 'Terminale D' }} · Mon profil</div>
                 </div>
             </a>

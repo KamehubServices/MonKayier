@@ -1732,7 +1732,7 @@ class StudentController extends Controller
         }
 
         // Appel du tuteur avec le cours sous les yeux et le mode d'interaction actif
-        $response = $aiService->askTutor($message, $course, $recentMessages, $contextText, $interactionMode);
+        $response = $aiService->askTutor($message, $course, $recentMessages, $contextText, $interactionMode, $student);
 
         $ttsService = app(\App\Services\Ai\NeuralTtsService::class);
         if (empty($response['spoken_text']) && !empty($response['source_text'])) {

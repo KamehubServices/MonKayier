@@ -18,7 +18,7 @@ class OpenSourceAiService
     {
         $this->baseUrl = rtrim(env('OPENSOURCE_AI_BASE_URL', 'https://openrouter.ai/api/v1'), '/');
         $this->apiKey = env('OPENSOURCE_AI_API_KEY', env('GROQ_API_KEY', null));
-        $this->modelMath = env('OPENSOURCE_AI_MODEL_MATH', 'mistralai/mistral-small-24b-instruct-2501');
+        $this->modelMath = env('OPENSOURCE_AI_MODEL_MATH', 'qwen/qwen-2.5-7b-instruct');
         $this->modelGeneral = env('OPENSOURCE_AI_MODEL_GENERAL', 'mistralai/mistral-nemo');
         $this->timeout = max(12, min(25, (int) env('OPENSOURCE_AI_TIMEOUT', 22)));
     }
@@ -35,8 +35,16 @@ class OpenSourceAiService
      * Génère une réponse socratique, intuitive et pédagogique pour le Tuteur IA dans la Révision IA.
      * Combine fidélité au cours officiel affiché à l'écran et liberté d'explication pédagogique (analogies, vulgarisation, exemples).
      */
-    public function askTutor(string $studentQuestion, ?object $course = null, array $conversationHistory = [], ?string $contextText = null, ?string $interactionMode = 'standard'): array
+    public function askTutor(string $studentQuestion, ?object $course = null, array $conversationHistory = [], ?string $contextText = null, ?string $interactionMode = 'standard', ?object $student = null): array
     {
+        $studentFirstName = trim((string) ($student->first_name ?? ''));
+        if (in_array(mb_strtolower($studentFirstName), ['', 'nouvel'], true)) {
+            $studentFirstName = '';
+        }
+        $studentIdentityBlock = $studentFirstName !== ''
+            ? "\nIDENTITE DE L'ELEVE : il s'appelle {$studentFirstName}. Appelle-le par son prénom de temps en temps (sans exagérer), toujours en le TUTOYANT.\n"
+            : "\nL'élève n'a pas encore renseigné son prénom : ne l'invente pas, tutoie-le simplement.\n";
+
         $courseTitle = $course ? ($course->clean_title ?? $course->title) : 'Programme National Lycée';
         $subjectCode = $course->subject_code ?? 'MATHS';
         $subjectName = $course->subject_name ?? 'Mathématiques';
@@ -51,6 +59,8 @@ class OpenSourceAiService
 
         // Système de consignes pédagogiques hybrides : Intuition personnelle du professeur + Rigueur du cours officiel MEPST Togo
         $systemPrompt = "Tu es le Tuteur IA d'excellence de la plateforme MonKayier au Togo, agissant comme un véritable professeur particulier passionné, chaleureux et pédagogue pour un élève de Lycée (Terminale BAC 2 / Première BAC 1) en {$subjectName} sur le chapitre : \"{$courseTitle}\".
+{$studentIdentityBlock}
+Règles de ton ABSOLUES : tutoie toujours l'élève (jamais de « vous »). Ne te présente PAS à chaque message et ne répète jamais « Je suis votre/ton Tuteur IA » : la conversation est déjà en cours. Va droit au but, de façon chaleureuse. Si l'élève te salue simplement, réponds par une salutation courte avec son prénom puis propose en une phrase de commencer.
 {$contextBlock}
 Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Officiel) :
 1. Liberté d'explication et pédagogie vivante : Tu ne dois PAS te contenter de réciter mécaniquement le cours. Explique les notions à ta manière, avec tes propres mots, des images mentales parlantes, des analogies concrètes du quotidien (par exemple des situations courantes à Lomé, Kara, en cuisine, en sport, en circulation ou dans la nature) pour débloquer la compréhension intuitive de l'élève.
@@ -82,8 +92,8 @@ Philosophie et méthode pédagogique (Approche Hybride : Intuition + Cours Offic
 
         $candidateModels = array_values(array_unique([
             $primaryModel,
-            'meta-llama/llama-3.1-70b-instruct',
             $this->modelGeneral,
+            'meta-llama/llama-3.1-8b-instruct',
             'qwen/qwen-2.5-7b-instruct',
         ]));
 

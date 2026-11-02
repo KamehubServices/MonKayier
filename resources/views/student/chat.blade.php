@@ -1866,13 +1866,13 @@ body.is-focus-mode .chat-input-bar {
                 <div class="chat-msg assistant" style="display: flex; flex-direction: column; gap: 6px; max-width: 95%;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="tg" style="align-self: flex-start; font-size: 10px; background: #F1F5F9; color: #475569;">Tuteur Vocal & Écrit</span>
-                        <button type="button" class="mk-tts-btn" data-speech="Bonjour Kodjo. Je suis ton tuteur IA pour le chapitre {{ $activeCourse->clean_title ?? ($activeCourse->title ?? 'ce cours') }}. Tu peux me poser des questions à l'écrit, surligner une phrase du cours ou lancer un appel vocal en direct." onclick="window.mkSpeakHuman(this.dataset.speech, this)">
+                        <button type="button" class="mk-tts-btn" data-speech="Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }}. Je suis ton tuteur IA pour le chapitre {{ $activeCourse->clean_title ?? ($activeCourse->title ?? 'ce cours') }}. Tu peux me poser des questions à l'écrit, surligner une phrase du cours ou lancer un appel vocal en direct." onclick="window.mkSpeakHuman(this.dataset.speech, this)">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                             <span>Écouter</span>
                         </button>
                     </div>
                     <div class="mk-ai-formatted" style="background: var(--immersion-card); border: 1.5px solid var(--immersion-card-border); padding: 12px 14px; border-radius: 4px 14px 14px 14px; line-height: 1.55; font-size: 13px; color: var(--immersion-text);">
-                        <p class="mk-ai-p">Bonjour Kodjo. Je suis ton tuteur IA pour le chapitre <strong class="mk-ai-bold">« {{ $activeCourse->clean_title ?? ($activeCourse->title ?? 'ce cours') }} »</strong>. Tu peux me poser tes questions, surligner un passage du cours à gauche pour que je te l'explique, ou cliquer sur <strong class="mk-ai-bold">Appel Vocal</strong> pour discuter de vive voix.</p>
+                        <p class="mk-ai-p">Bonjour {{ ($student->first_name ?? '') !== 'Nouvel' ? ($student->first_name ?? 'toi') : 'toi' }}. Je suis ton tuteur IA pour le chapitre <strong class="mk-ai-bold">« {{ $activeCourse->clean_title ?? ($activeCourse->title ?? 'ce cours') }} »</strong>. Tu peux me poser tes questions, surligner un passage du cours à gauche pour que je te l'explique, ou cliquer sur <strong class="mk-ai-bold">Appel Vocal</strong> pour discuter de vive voix.</p>
                     </div>
                 </div>
 
