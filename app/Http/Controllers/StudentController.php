@@ -817,12 +817,17 @@ class StudentController extends Controller
     protected function findOfficialExamForCourse($course, string $subjectCode): ?array
     {
         try {
+            $student = $this->getStudent();
+            $studentSerie = !empty($student->serie) ? strtoupper(trim($student->serie)) : 'D';
+
             $query = DB::table('learning_resources')
                 ->join('subjects', 'learning_resources.subject_id', '=', 'subjects.id')
                 ->leftJoin('resource_versions', 'learning_resources.id', '=', 'resource_versions.resource_id')
                 ->leftJoin('resource_files', 'resource_versions.id', '=', 'resource_files.resource_version_id')
                 ->where('learning_resources.resource_type', 'exam_paper')
-                ->whereNotNull('resource_files.id');
+                ->whereNotNull('resource_files.id')
+                ->where('learning_resources.title', 'not like', '%Corrigé%')
+                ->where('learning_resources.title', 'not like', '%CORRIGE%');
 
             if (!empty($course->subject_id)) {
                 $query->where('learning_resources.subject_id', $course->subject_id);
@@ -833,8 +838,14 @@ class StudentController extends Controller
                 });
             }
 
-            // Priorité aux épreuves de Terminale / BAC 2 et sessions récentes
+            // Priorité absolue : Série de l'élève (ex: D), puis Terminale/BAC2, puis année la plus récente
             $exam = $query->orderByRaw("
+                CASE 
+                    WHEN UPPER(learning_resources.serie) = ? THEN 1
+                    WHEN UPPER(learning_resources.serie) LIKE ? THEN 2
+                    WHEN UPPER(learning_resources.file_code) LIKE ? THEN 3
+                    ELSE 4
+                END ASC,
                 CASE 
                     WHEN learning_resources.exam_type = 'BAC2' THEN 1
                     WHEN learning_resources.file_code LIKE '%TLE%' THEN 2
@@ -842,7 +853,11 @@ class StudentController extends Controller
                     ELSE 4
                 END ASC,
                 learning_resources.year DESC
-            ")->select(
+            ", [
+                $studentSerie,
+                "%{$studentSerie}%",
+                "%_{$studentSerie}_%"
+            ])->select(
                 'learning_resources.id as resource_id',
                 'learning_resources.title',
                 'learning_resources.file_code',
@@ -859,7 +874,7 @@ class StudentController extends Controller
                     'title' => $exam->title,
                     'file_code' => $exam->file_code,
                     'year' => $exam->year ?? 2023,
-                    'serie' => $exam->serie ?? 'D',
+                    'serie' => $exam->serie ?? $studentSerie,
                     'exam_type' => $exam->exam_type ?? 'BAC 2',
                     'subject_name' => $exam->subject_name,
                     'file_id' => $exam->file_id,
@@ -1454,18 +1469,39 @@ class StudentController extends Controller
                 'bareme' => $pedagogy['tier2']['bareme'] ?? 'Barème officiel',
             ]);
         } else {
-            // Palier 3 : Problème de Synthèse BAC National
-            if (empty($studentResponse) || mb_strlen($studentResponse) < 15) {
+            // Palier 3 : Problème de Synthèse BAC National (Copie Manuscrite Scannée ou Démonstration)
+            $hasCopy = $request->hasFile('copy_file') || !empty($request->input('copy_image'));
+            $copyPath = null;
+
+            if ($request->hasFile('copy_file')) {
+                $file = $request->file('copy_file');
+                $filename = 'copy_' . $student->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $copyPath = $file->storeAs('student_copies', $filename, 'public');
+            } elseif (!empty($request->input('copy_image'))) {
+                $imgData = $request->input('copy_image');
+                if (preg_match('/^data:image\/(\w+);base64,/', $imgData, $type)) {
+                    $imgData = substr($imgData, strpos($imgData, ',') + 1);
+                    $imgData = base64_decode($imgData);
+                    $ext = strtolower($type[1]);
+                    $filename = 'copy_' . $student->id . '_' . time() . '.' . $ext;
+                    \Illuminate\Support\Facades\Storage::disk('public')->put('student_copies/' . $filename, $imgData);
+                    $copyPath = 'student_copies/' . $filename;
+                }
+            }
+
+            if (!$hasCopy && (empty($studentResponse) || mb_strlen($studentResponse) < 8)) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Pour valider le Palier 3 (Synthèse BAC), tu dois justifier au moins deux étapes de ta démonstration.',
+                    'error' => 'Tu dois déposer une photo de ta copie rédigée sur cahier (ou détailler ta démarche) pour déverrouiller la correction officielle du BAC.',
                 ], 422);
             }
 
             $xpAwarded = 100;
 
             $aiService = app(\App\Services\Ai\OpenSourceAiService::class);
-            $aiEval = $aiService->evaluateStepDemonstration(
+            $aiEval = $hasCopy ? [
+                'feedback' => 'Copie manuscrite réceptionnée et analysée selon les critères du barème national MEPST. Félicitations pour ta rédaction sur papier ! Consulte la grille officielle et le corrigé ci-dessous.'
+            ] : $aiService->evaluateStepDemonstration(
                 $course->clean_title ?? ($course->title ?? 'Cours'),
                 $course->subject_code ?? 'MATHS',
                 $pedagogy['tier3']['prompt'] ?? 'Problème de synthèse BAC',
@@ -1484,6 +1520,7 @@ class StudentController extends Controller
                 'updated_mastery' => $updatedMastery,
                 'milestone_sync' => $milestoneSync,
                 'subject_id' => $course->subject_id ?? null,
+                'copy_url' => $copyPath ? asset('storage/' . $copyPath) : null,
                 'feedback' => $aiEval['feedback'] ?? 'Félicitations. Ta démonstration a été analysée selon la grille MEPST et le corrigé modèle est déverrouillé.',
                 'unlocked_solution' => $pedagogy['tier3']['solution'] ?? 'Corrigé officiel BAC',
                 'bareme' => $pedagogy['tier3']['bareme'] ?? 'Grille officielle MEPST',

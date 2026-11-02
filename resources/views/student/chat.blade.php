@@ -625,6 +625,126 @@
     color: #FFFFFF;
     border-color: #0E1022;
 }
+
+/* Stepper Séquentiel par Paliers (MonKayier) */
+.mk-tier-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    background: var(--immersion-pane);
+    border: 1.5px solid var(--immersion-border);
+    border-radius: 14px;
+    padding: 8px 14px;
+    overflow-x: auto;
+}
+.mk-tier-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: default;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex: 1;
+    min-width: 170px;
+}
+.mk-tier-step.unlocked {
+    cursor: pointer;
+}
+.mk-tier-step.active {
+    background: #0E1022;
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(14, 16, 34, 0.15);
+}
+.mk-tier-step.locked {
+    opacity: 0.5;
+    background: transparent;
+    cursor: not-allowed;
+}
+.mk-tier-step.completed {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    cursor: pointer;
+}
+.mk-step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 900;
+    flex: none;
+    background: #E2E8F0;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+.mk-tier-step.active .mk-step-circle {
+    background: #D4F25C;
+    color: #0E1022;
+}
+.mk-tier-step.completed .mk-step-circle {
+    background: #10B981;
+    color: #FFFFFF;
+}
+.mk-step-connector {
+    width: 20px;
+    height: 2px;
+    background: #E2E8F0;
+    flex: none;
+    transition: background 0.2s ease;
+}
+.mk-step-connector.active {
+    background: #10B981;
+}
+
+/* Branding Compte à Rebours (Timer MonKayier) */
+.mk-branded-timer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0E1022;
+    border: 1.5px solid rgba(212, 242, 92, 0.4);
+    box-shadow: 0 4px 16px rgba(14, 16, 34, 0.2);
+    border-radius: 12px;
+    padding: 8px 18px;
+    color: #FFFFFF;
+}
+.mk-timer-dial {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: #D4F25C;
+    letter-spacing: 0.04em;
+    min-width: 44px;
+    transition: color 0.25s ease;
+}
+.mk-timer-badge {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94A3B8;
+}
+
+/* Zone de Dépôt de Copie Manuscrite (Palier 3) */
+.mk-copy-dropzone {
+    border: 2px dashed #CBD5E1;
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+    background: var(--immersion-card);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.mk-copy-dropzone:hover {
+    border-color: #0E1022;
+    background: rgba(14, 16, 34, 0.02);
+}
+
 .timer-pulse {
     animation: timerPulse 1s infinite alternate;
 }
@@ -1617,19 +1737,31 @@ body.is-focus-mode .chat-input-bar {
 
             {{-- MODE 3 : EXERCICES & DÉFI DES 3 PALIERS --}}
             <div id="workshopModeExercices" style="display: none; flex: 1 1 0%; min-height: 0; height: 100%; max-height: 100%; width: 100%; overflow-y: auto !important; -webkit-overflow-scrolling: touch; padding: 24px 30px; box-sizing: border-box; background: var(--immersion-card);">
-{{-- Navigation entre les 3 Paliers --}}
-                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <button type="button" class="tier-tab active" id="btnTier1" onclick="switchTier(1)">
-                        <span>Palier 1 : Quiz Flash (60s)</span>
-                    </button>
-
-                    <button type="button" class="tier-tab" id="btnTier2" onclick="switchTier(2)">
-                        <span>Palier 2 : Application Méthode</span>
-                    </button>
-
-                    <button type="button" class="tier-tab" id="btnTier3" onclick="switchTier(3)">
-                        <span>Palier 3 : Synthèse BAC National</span>
-                    </button>
+{{-- Stepper Séquentiel par Paliers (Navigation Sécurisée sans Saut) --}}
+                <div class="mk-tier-stepper">
+                    <div class="mk-tier-step active unlocked" id="stepIndicator1" onclick="navigateToTier(1)">
+                        <div class="mk-step-circle" id="circleTier1">1</div>
+                        <div>
+                            <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Palier 1</div>
+                            <div style="font-size: 12.5px; font-weight: 800;">Quiz Réflexes (60s)</div>
+                        </div>
+                    </div>
+                    <div class="mk-step-connector" id="connector1_2"></div>
+                    <div class="mk-tier-step locked" id="stepIndicator2" onclick="navigateToTier(2)">
+                        <div class="mk-step-circle" id="circleTier2">🔒</div>
+                        <div>
+                            <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Palier 2</div>
+                            <div style="font-size: 12.5px; font-weight: 800;">Application Méthode</div>
+                        </div>
+                    </div>
+                    <div class="mk-step-connector" id="connector2_3"></div>
+                    <div class="mk-tier-step locked" id="stepIndicator3" onclick="navigateToTier(3)">
+                        <div class="mk-step-circle" id="circleTier3">🔒</div>
+                        <div>
+                            <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;">Palier 3</div>
+                            <div style="font-size: 12.5px; font-weight: 800;">Synthèse BAC Togo</div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- PALIER 1 : QUIZ FLASH CHRONOMÉTRÉ (60s) --}}
@@ -1644,12 +1776,15 @@ body.is-focus-mode .chat-input-bar {
                             </div>
                         </div>
 
-                        {{-- Chronomètre Visuel 60 secondes --}}
-                        <div style="display: flex; align-items: center; gap: 10px; background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 12px; padding: 8px 16px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" class="timer-pulse"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        {{-- Chronomètre MonKayier Branded 60s --}}
+                        <div class="mk-branded-timer" id="qcmTimerContainer">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D4F25C" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" class="timer-pulse">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
                             <div>
-                                <div style="font-size: 10.5px; font-weight: 700; color: #991B1B;">TEMPS RESTANT</div>
-                                <div id="qcmCountdown" style="font-size: 18px; font-weight: 900; color: #DC2626; font-family: monospace;">60s</div>
+                                <div class="mk-timer-badge">CHRONO RÉFLEXES BAC</div>
+                                <div id="qcmCountdown" class="mk-timer-dial">60s</div>
                             </div>
                         </div>
                     </div>
@@ -1677,10 +1812,14 @@ body.is-focus-mode .chat-input-bar {
 
                         <div id="tier1ResultFeedback" style="margin-bottom: 14px; font-size: 13.5px; color: var(--immersion-text);"></div>
 
-                        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
                             <button type="button" id="btnSubmitTier1" onclick="submitTier1()" class="tg" 
                                     style="background: #D4F25C; color: #0E1022; font-size: 13px; font-weight: 850; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; box-shadow: none !important;">
-                                Valider le Quiz & Passer au Palier 2 →
+                                Valider le Quiz Réflexes
+                            </button>
+                            <button type="button" id="btnNextTier2" onclick="navigateToTier(2)" 
+                                    style="display: none; background: #0E1022; color: #D4F25C; font-size: 13px; font-weight: 850; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; box-shadow: none !important;">
+                                Passer au Palier 2 (Application Méthode) →
                             </button>
                         </div>
                     </form>
@@ -1698,7 +1837,7 @@ body.is-focus-mode .chat-input-bar {
                     </div>
 
                     <div style="margin-bottom: 20px; background: var(--immersion-card); border: 1.5px solid var(--immersion-card-border); border-radius: 12px; padding: 18px; line-height: 1.6; font-size: 14px; color: var(--immersion-text);">
-                        {!! nl2br(e($chapterPedagogy['tier2']['prompt'] ?? 'Résous l\'exercice ci-dessous.')) !!}
+                        {!! $chapterPedagogy['tier2']['statement'] ?? $chapterPedagogy['tier2']['prompt'] ?? 'Résous l\'exercice ci-dessous.' !!}
                     </div>
 
                     <div style="margin-bottom: 20px;">
@@ -1764,7 +1903,7 @@ body.is-focus-mode .chat-input-bar {
                                 style="background: #0E1022; color: #FFFFFF; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: none !important;">
                             Soumettre au Tuteur IA
                         </button>
-                        <button type="button" id="btnNextTier3" onclick="switchTier(3)" style="display: none; background: #D4F25C; color: #0E1022; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
+                        <button type="button" id="btnNextTier3" onclick="navigateToTier(3)" style="display: none; background: #D4F25C; color: #0E1022; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
                             Passer au Palier 3 (Synthèse BAC) →
                         </button>
                     </div>
@@ -1782,7 +1921,7 @@ body.is-focus-mode .chat-input-bar {
                     </div>
 
                     <div style="margin-bottom: 20px; background: var(--immersion-card); border: 1.5px solid var(--immersion-card-border); border-radius: 12px; padding: 18px; line-height: 1.6; font-size: 14px; color: var(--immersion-text);">
-                        {!! nl2br(e($chapterPedagogy['tier3']['statement'] ?? $chapterPedagogy['tier3']['prompt'] ?? 'Traite le problème de synthèse ci-dessous.')) !!}
+                        {!! $chapterPedagogy['tier3']['statement'] ?? $chapterPedagogy['tier3']['prompt'] ?? 'Traite le problème de synthèse ci-dessous.' !!}
                     </div>
 
                     @if(!empty($chapterPedagogy['tier3']['official_exam']))
@@ -1818,53 +1957,61 @@ body.is-focus-mode .chat-input-bar {
                         </div>
                     @endif
 
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 13px; font-weight: 800; color: var(--immersion-text); margin-bottom: 8px;">
-                            Ta rédaction de synthèse :
-                        </label>
+                    {{-- ZONE DE DÉPÔT DE COPIE MANUSCRITE SUR CAHIER (PHOTO / SCAN) --}}
+                    <div style="margin-bottom: 22px;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                            <label style="font-size: 13.5px; font-weight: 850; color: var(--immersion-text);">
+                                Ta Copie Manuscrite (Photo ou Scan de ton cahier) :
+                            </label>
+                            <span style="font-size: 11.5px; font-weight: 700; color: #2563EB;">Entraînement en Conditions d'Examen</span>
+                        </div>
 
-                        {{-- Clavier Virtuel Scientifique Palier 3 --}}
-                        <div class="sc-kbd-toolbar">
-                            <div class="sc-kbd-header">
-                                <div class="sc-kbd-tabs">
-                                    <button type="button" class="sc-kbd-tab active" onclick="switchKbdTab(this, 'maths')">Mathématiques</button>
-                                    <button type="button" class="sc-kbd-tab" onclick="switchKbdTab(this, 'pct')">Physique-Chimie</button>
-                                </div>
-                                <span class="sc-kbd-hint">Clique pour insérer le symbole</span>
+                        <div style="background: rgba(37, 99, 235, 0.04); border: 1.5px solid rgba(37, 99, 235, 0.16); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; font-size: 12.5px; color: var(--immersion-text); line-height: 1.55;">
+                            <b>Consigne d'épreuve :</b> Rédige l'exercice au propre sur ta feuille de copie ou ton cahier d'exercices (comme au BAC). Prends ensuite une photo nette ou scanne ta copie pour la soumettre au Tuteur IA.
+                        </div>
+
+                        {{-- Input fichier invisible avec capture caméra native --}}
+                        <input type="file" id="tier3CopyInput" accept="image/*,application/pdf" capture="environment" style="display: none;" onchange="handleCopyFileSelected(this)">
+
+                        {{-- Zone de dépôt intuitive --}}
+                        <div id="tier3Dropzone" class="mk-copy-dropzone" onclick="document.getElementById('tier3CopyInput').click()">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: #0E1022; color: #D4F25C; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
                             </div>
-                            <div class="sc-kbd-keys sc-kbd-maths">
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '√')">√x</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '²')">x²</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '^')">xⁿ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '/')">a/b</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'lim(x→+∞) ')">lim</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'ln(')">ln(x)</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'e^')">eˣ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '∫')">∫</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '⇒')">⇒</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '⇔')">⇔</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'vec(')">vec(u)</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'π')">π</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'Δ')">Δ</button>
+                            <div style="font-size: 14.5px; font-weight: 850; color: var(--immersion-text); margin-bottom: 4px;">
+                                Prendre en photo ou déposer ma copie de cahier
                             </div>
-                            <div class="sc-kbd-keys sc-kbd-pct" style="display:none;">
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '[H₃O⁺]')">[H₃O⁺]</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '[OH⁻]')">[OH⁻]</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'pH')">pH</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'Ke')">Ke</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'pKa')">pKa</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '⇄')">⇄</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', '→')">→</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'g = 9.8 m/s²')">g</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'λ')">λ</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'Ω')">Ω</button>
-                                <button type="button" class="sc-key" onclick="insertSymbol('tier3StudentInput', 'mol/L')">mol/L</button>
+                            <div style="font-size: 12px; color: var(--immersion-subtext);">
+                                Clique ici pour ouvrir l'appareil photo ou importer une photo/scan (JPG, PNG, PDF)
                             </div>
                         </div>
 
-                        <textarea id="tier3StudentInput" rows="7" 
-                                  style="width: 100%; border: 1.5px solid var(--immersion-border); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 13.5px; box-sizing: border-box; outline: none; background: var(--immersion-pane); color: var(--immersion-text);" 
-                                  placeholder="Détaille tes étapes de démonstration…"></textarea>
+                        {{-- Aperçu de la copie sélectionnée --}}
+                        <div id="tier3CopyPreviewBox" style="display: none; margin-top: 14px; background: var(--immersion-pane); border: 1.5px solid var(--immersion-border); border-radius: 12px; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <img id="tier3CopyPreviewImg" src="" alt="Aperçu copie" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1.5px solid #CBD5E1; display: none;">
+                                <div id="tier3PdfIcon" style="width: 52px; height: 52px; border-radius: 8px; background: #DC2626; color: #fff; font-weight: 900; font-size: 12px; display: none; align-items: center; justify-content: center;">
+                                    PDF
+                                </div>
+                                <div>
+                                    <div id="tier3CopyFileName" style="font-size: 13.5px; font-weight: 800; color: var(--immersion-text);">copie.jpg</div>
+                                    <div id="tier3CopyFileSize" style="font-size: 11.5px; color: #166534; font-weight: 700;">Prête pour évaluation</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('tier3CopyInput').click()" 
+                                    style="background: #F1F5F9; color: #0E1022; border: 1.5px solid #CBD5E1; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                                Changer la photo
+                            </button>
+                        </div>
+
+                        {{-- Remarque facultative --}}
+                        <div style="margin-top: 12px;">
+                            <input type="text" id="tier3StudentNotes" placeholder="Une remarque ou question sur ta rédaction ? (facultatif)" 
+                                   style="width: 100%; border: 1.5px solid var(--immersion-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; outline: none; background: var(--immersion-pane); color: var(--immersion-text); box-sizing: border-box;">
+                        </div>
                     </div>
 
                     {{-- Zone de Corrigé Intégral Déverrouillé --}}
@@ -1879,7 +2026,7 @@ body.is-focus-mode .chat-input-bar {
                     <div style="display: flex; justify-content: flex-end;">
                         <button type="button" id="btnSubmitTier3" onclick="submitTier3()" 
                                 style="background: #0E1022; color: #D4F25C; border: none; border-radius: 8px; padding: 12px 24px; font-size: 13.5px; font-weight: 850; cursor: pointer; box-shadow: none !important;">
-                            Valider ma synthèse BAC & Débloquer la grille
+                            Soumettre ma copie pour évaluation officielle MEPST →
                         </button>
                     </div>
                 </div>
@@ -2506,13 +2653,33 @@ function getActiveScreenContext() {
         return "Épreuve officielle d'annale du BAC national ouverte dans le lecteur PDF.";
     }
 }
-// Basculer entre les 3 Paliers gradués
-function switchTier(tier) {
+// Variables de progression stricte par palier
+let completedTier1 = false;
+let completedTier2 = false;
+let currentActiveTier = 1;
+let selectedCopyFile = null;
+
+// Navigation séquentielle verrouillée entre les 3 Paliers
+function navigateToTier(tier) {
+    if (tier === 2 && !completedTier1) {
+        showChatToast("Palier 2 verrouillé : Valide d'abord le Quiz Réflexes (Palier 1) !", true);
+        return;
+    }
+    if (tier === 3 && !completedTier2) {
+        showChatToast("Palier 3 verrouillé : Valide d'abord l'application méthodologique (Palier 2) !", true);
+        return;
+    }
+
+    currentActiveTier = tier;
     for (let t = 1; t <= 3; t++) {
-        const btn = document.getElementById('btnTier' + t);
+        const step = document.getElementById('stepIndicator' + t);
         const content = document.getElementById('tierContent' + t);
-        if (btn) btn.classList.toggle('active', t === tier);
-        if (content) content.style.display = (t === tier) ? 'block' : 'none';
+        if (step) {
+            step.classList.toggle('active', t === tier);
+        }
+        if (content) {
+            content.style.display = (t === tier) ? 'block' : 'none';
+        }
     }
 
     if (tier === 1) {
@@ -2520,23 +2687,81 @@ function switchTier(tier) {
     } else {
         clearInterval(qcmTimerInterval);
     }
+
+    setTimeout(renderKaTeX, 60);
 }
 
-// Chronomètre du Palier 1
+// Rétrocompatibilité
+function switchTier(tier) {
+    navigateToTier(tier);
+}
+
+// Chronomètre MonKayier Branded (60s)
 function startQcmCountdown() {
     clearInterval(qcmTimerInterval);
     qcmTimeLeft = 60;
     const cdEl = document.getElementById('qcmCountdown');
-    if (cdEl) cdEl.innerText = '60s';
+    if (cdEl) {
+        cdEl.innerText = '60s';
+        cdEl.style.color = '#D4F25C';
+    }
 
     qcmTimerInterval = setInterval(() => {
         qcmTimeLeft--;
-        if (cdEl) cdEl.innerText = qcmTimeLeft + 's';
+        if (cdEl) {
+            cdEl.innerText = (qcmTimeLeft < 10 ? '0' : '') + qcmTimeLeft + 's';
+            if (qcmTimeLeft <= 10) {
+                cdEl.style.color = '#EF4444';
+            } else if (qcmTimeLeft <= 25) {
+                cdEl.style.color = '#F59E0B';
+            } else {
+                cdEl.style.color = '#D4F25C';
+            }
+        }
         if (qcmTimeLeft <= 0) {
             clearInterval(qcmTimerInterval);
-            if (cdEl) cdEl.innerText = 'Temps écoulé';
+            if (cdEl) {
+                cdEl.innerText = '00s';
+                cdEl.style.color = '#EF4444';
+            }
         }
     }, 1000);
+}
+
+// Gestion de la photo / scan de copie pour le Palier 3
+function handleCopyFileSelected(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    selectedCopyFile = file;
+
+    const previewBox = document.getElementById('tier3CopyPreviewBox');
+    const previewImg = document.getElementById('tier3CopyPreviewImg');
+    const pdfIcon = document.getElementById('tier3PdfIcon');
+    const nameEl = document.getElementById('tier3CopyFileName');
+    const sizeEl = document.getElementById('tier3CopyFileSize');
+
+    if (nameEl) nameEl.textContent = file.name;
+    const sizeStr = file.size > 1048576 
+        ? (file.size / 1048576).toFixed(1) + ' Mo' 
+        : Math.round(file.size / 1024) + ' Ko';
+    if (sizeEl) sizeEl.textContent = sizeStr + ' · Prête pour évaluation';
+
+    if (previewBox) previewBox.style.display = 'flex';
+
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (previewImg) {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+            }
+            if (pdfIcon) pdfIcon.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        if (previewImg) previewImg.style.display = 'none';
+        if (pdfIcon) pdfIcon.style.display = 'flex';
+    }
 }
 
 function updateDynamicMasteryUI(subjectId, newPercent) {
@@ -2582,11 +2807,35 @@ function submitTier1() {
     })
     .then(res => res.json())
     .then(data => {
-        hasCompletedTier1 = true;
         btn.disabled = false;
-        btn.innerText = 'Palier 1 Validé';
+        hasCompletedTier1 = true;
+        completedTier1 = true;
+
+        btn.innerText = 'Quiz Validé ✓';
         btn.style.background = '#059669';
         btn.style.color = '#fff';
+
+        // Mise à jour visuelle du Stepper
+        const step1 = document.getElementById('stepIndicator1');
+        if (step1) {
+            step1.classList.add('completed');
+            const c1 = document.getElementById('circleTier1');
+            if (c1) c1.innerHTML = '✓';
+        }
+        const conn1 = document.getElementById('connector1_2');
+        if (conn1) conn1.classList.add('active');
+
+        // Déverrouillage du Palier 2
+        const step2 = document.getElementById('stepIndicator2');
+        if (step2) {
+            step2.classList.remove('locked');
+            step2.classList.add('unlocked');
+            const c2 = document.getElementById('circleTier2');
+            if (c2) c2.innerHTML = '2';
+        }
+
+        const btnNext = document.getElementById('btnNextTier2');
+        if (btnNext) btnNext.style.display = 'inline-block';
 
         if (data.updated_mastery) {
             updateDynamicMasteryUI(data.subject_id, data.updated_mastery);
@@ -2617,7 +2866,7 @@ function submitTier1() {
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerText = 'Valider mes réponses →';
+        btn.innerText = 'Valider le Quiz Réflexes';
     });
 }
 
@@ -2641,7 +2890,7 @@ function showChatToast(msg, isError = false) {
     }, 3800);
 }
 
-// Soumission du Palier 2 (Application Méthodologique & Anti-Triche)
+// Soumission du Palier 2 (Application Méthodologique & Déverrouillage Palier 3)
 function submitTier2() {
     const text = (document.getElementById('tier2StudentInput').value || '').trim();
     if (!text || text.length < 8) {
@@ -2670,19 +2919,43 @@ function submitTier2() {
     .then(data => {
         btn.disabled = false;
         if (data.success) {
-            btn.innerText = 'Corrigé Déverrouillé';
+            completedTier2 = true;
+            btn.innerText = 'Démarche Validée ✓';
             btn.style.background = '#059669';
             btn.style.color = '#fff';
+
+            // Mise à jour visuelle du Stepper
+            const step2 = document.getElementById('stepIndicator2');
+            if (step2) {
+                step2.classList.add('completed');
+                const c2 = document.getElementById('circleTier2');
+                if (c2) c2.innerHTML = '✓';
+            }
+            const conn2 = document.getElementById('connector2_3');
+            if (conn2) conn2.classList.add('active');
+
+            // Déverrouillage du Palier 3
+            const step3 = document.getElementById('stepIndicator3');
+            if (step3) {
+                step3.classList.remove('locked');
+                step3.classList.add('unlocked');
+                const c3 = document.getElementById('circleTier3');
+                if (c3) c3.innerHTML = '3';
+            }
+
+            const btnNext = document.getElementById('btnNextTier3');
+            if (btnNext) btnNext.style.display = 'inline-block';
 
             if (data.updated_mastery) {
                 updateDynamicMasteryUI(data.subject_id, data.updated_mastery);
             }
 
-            document.getElementById('tier2LockBanner').style.display = 'none';
             const unlBox = document.getElementById('tier2UnlockedBox');
-            unlBox.style.display = 'block';
-            document.getElementById('tier2SolutionContent').innerHTML = data.unlocked_solution;
-            document.getElementById('tier2BaremeTag').innerText = data.bareme;
+            if (unlBox) unlBox.style.display = 'block';
+            const solEl = document.getElementById('tier2SolutionContent');
+            if (solEl) solEl.innerHTML = data.unlocked_solution;
+            const barEl = document.getElementById('tier2BaremeTag');
+            if (barEl) barEl.innerText = data.bareme;
 
             if (data.feedback) {
                 const fbBox = document.getElementById('tier2FeedbackBox');
@@ -2695,65 +2968,76 @@ function submitTier2() {
             setTimeout(renderKaTeX, 60);
         } else {
             showChatToast(data.error || "Erreur de validation", true);
-            btn.innerText = 'Valider ma démarche & Déverrouiller';
+            btn.innerText = 'Soumettre ma démarche au Tuteur IA';
         }
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerText = 'Valider ma démarche & Déverrouiller';
+        btn.innerText = 'Soumettre ma démarche au Tuteur IA';
     });
 }
 
-// Soumission du Palier 3 (Problème de Synthèse BAC National)
+// Soumission du Palier 3 (Copie Manuscrite Photographiée / Scannée)
 function submitTier3() {
-    const text = (document.getElementById('tier3StudentInput').value || '').trim();
-    if (!text || text.length < 15) {
-        showChatToast("Règle Anti-Triche : Détaille au moins deux étapes de ta démonstration pour déverrouiller la grille de correction officielle du BAC.", true);
+    if (!selectedCopyFile) {
+        showChatToast("Tu dois d'abord prendre en photo ou déposer ta copie manuscrite traitée sur cahier.", true);
         return;
     }
 
     const btn = document.getElementById('btnSubmitTier3');
     btn.disabled = true;
-    btn.innerText = 'Analyse de ta démonstration selon les critères MEPST…';
+    btn.innerText = 'Évaluation de ta copie selon les critères officiels MEPST…';
+
+    const formData = new FormData();
+    formData.append('course_id', currentCourseId);
+    formData.append('tier', 3);
+    formData.append('copy_file', selectedCopyFile);
+    const notes = document.getElementById('tier3StudentNotes');
+    if (notes && notes.value.trim()) {
+        formData.append('student_response', notes.value.trim());
+    }
 
     fetch('{{ route("student.chat.evaluate") }}', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            course_id: currentCourseId,
-            tier: 3,
-            student_response: text
-        })
+        body: formData
     })
     .then(res => res.json())
     .then(data => {
         btn.disabled = false;
         if (data.success) {
-            btn.innerText = 'Synthèse Validée';
-            btn.style.background = '#7C3AED';
+            btn.innerText = 'Copie Validée · Barème Déverrouillé ✓';
+            btn.style.background = '#10B981';
             btn.style.color = '#fff';
+
+            const step3 = document.getElementById('stepIndicator3');
+            if (step3) {
+                step3.classList.add('completed');
+                const c3 = document.getElementById('circleTier3');
+                if (c3) c3.innerHTML = '✓';
+            }
 
             if (data.updated_mastery) {
                 updateDynamicMasteryUI(data.subject_id, data.updated_mastery);
             }
 
-            document.getElementById('tier3LockBanner').style.display = 'none';
             const unlBox = document.getElementById('tier3UnlockedBox');
-            unlBox.style.display = 'block';
-            document.getElementById('tier3SolutionContent').innerHTML = data.unlocked_solution;
+            if (unlBox) unlBox.style.display = 'block';
+            const solEl = document.getElementById('tier3SolutionContent');
+            if (solEl) solEl.innerHTML = data.unlocked_solution;
             setTimeout(renderKaTeX, 60);
         } else {
-            showChatToast(data.error || "Erreur de validation", true);
-            btn.innerText = 'Valider ma synthèse BAC & Débloquer la grille';
+            showChatToast(data.error || "Erreur lors de l'envoi de la copie", true);
+            btn.innerText = 'Soumettre ma copie pour évaluation officielle MEPST →';
         }
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerText = 'Valider ma synthèse BAC & Débloquer la grille';
+        showChatToast("Une erreur est survenue lors de l'envoi de la copie.", true);
+        btn.innerText = 'Soumettre ma copie pour évaluation officielle MEPST →';
     });
 }
 

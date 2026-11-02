@@ -380,19 +380,105 @@ class OfficialCourseService
                 ],
             ],
             'tier2' => [
-                'title' => 'Palier 2 : Application Méthodologique & Calcul',
+                'title' => 'Palier 2 : Application Méthodologique & Calcul (Format BAC)',
                 'xp' => 50,
-                'statement' => 'Soit la fonction g définie sur ]0, +∞[ par g(x) = x² - 2ln(x).<br>1. Calculez la dérivée g\'(x) et factorisez-la.<br>2. Étudiez le signe de g\'(x) sur ]0, +∞[ et donnez la valeur exacte du minimum de g.',
-                'hint' => 'Dérive x² (qui donne 2x) puis -2ln(x) (qui donne -2/x). Réduis ensuite au même dénominateur.',
-                'solution' => '<b>Résolution officielle détaillée :</b><br>1. Pour tout x > 0, g\'(x) = 2x - 2/x = (2x² - 2)/x = 2(x² - 1)/x = 2(x - 1)(x + 1)/x.<br>2. Comme x > 0 et x + 1 > 0, g\'(x) est du signe de (x - 1) :<br>• Sur ]0, 1[, g\'(x) < 0 donc g est strictement décroissante.<br>• Sur ]1, +∞[, g\'(x) > 0 donc g est strictement croissante.<br>3. g admet ainsi un minimum absolu en x = 1 valant g(1) = 1² - 2ln(1) = 1 - 0 = <b>1</b>.',
-                'bareme' => '1 pt pour la factorisation de g\'(x) · 1 pt pour l\'étude du signe · 1 pt pour la valeur exacte du minimum g(1) = 1.',
+                'statement' => '<div class="bac-exam-box">'
+                    . '<div class="bac-exam-header-meta"><b>EXERCICE D\'APPLICATION GUIDÉ</b> · Barème Officiel MEPST</div>'
+                    . '<p style="margin: 8px 0 12px 0;">Soit la fonction $g$ définie sur $]0, +\infty[$ par :</p>'
+                    . '<div style="text-align: center; margin: 12px 0; font-size: 16px;">$$g(x) = x^2 - 2\ln(x)$$</div>'
+                    . '<div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px;">'
+                    . '  <div><b>1.</b> Calculer la fonction dérivée $g\'(x)$ pour tout $x \in ]0, +\infty[$ et l\'écrire sous forme factorisée.</div>'
+                    . '  <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '</div>'
+                    . '<div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 6px;">'
+                    . '  <div><b>2.</b> Étudier le signe de $g\'(x)$ sur $]0, +\infty[$, dresser le tableau de variations complet de $g$ et donner la valeur exacte de son minimum absolu.</div>'
+                    . '  <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '</div>'
+                    . '</div>',
+                'hint' => 'Dérive $x^2$ (qui donne $2x$) puis $-2\ln(x)$ (qui donne $-\frac{2}{x}$). Réduis au même dénominateur $x$ et factorise le numérateur grâce à $x^2 - 1 = (x-1)(x+1)$.',
+                'solution' => '<div class="bac-solution-box" style="line-height: 1.7;">'
+                    . '<h4 style="font-size: 14.5px; font-weight: 850; color: #166534; margin: 0 0 10px 0;">Corrigé type officiel et barème détaillé MEPST :</h4>'
+                    . '<div style="margin-bottom: 12px;">'
+                    . '<b>1. Calcul et factorisation de la dérivée :</b><br>'
+                    . 'La fonction $g$ est dérivable sur $]0, +\infty[$ comme somme de fonctions usuelles dérivables.<br>'
+                    . 'Pour tout $x \in ]0, +\infty[$ :<br>'
+                    . '$$g\'(x) = 2x - 2 \cdot \frac{1}{x} = \frac{2x^2 - 2}{x} = \frac{2(x^2 - 1)}{x} = \frac{2(x - 1)(x + 1)}{x}$$'
+                    . '<span style="font-size: 12px; font-weight: 700; color: #15803D;">[1,5 point : 0,75 pt pour la dérivée + 0,75 pt pour la factorisation]</span>'
+                    . '</div>'
+                    . '<div>'
+                    . '<b>2. Signe de $g\'(x)$, variations et minimum :</b><br>'
+                    . 'Pour tout $x > 0$, on a $x > 0$ et $x + 1 > 0$. Donc $g\'(x)$ a le même signe que $(x - 1)$ :<br>'
+                    . '• Si $x \in ]0, 1[$, $x - 1 < 0 \implies g\'(x) < 0$ : $g$ est strictement décroissante.<br>'
+                    . '• Si $x \in ]1, +\infty[$, $x - 1 > 0 \implies g\'(x) > 0$ : $g$ est strictement croissante.<br>'
+                    . '• En $x = 1$, $g\'(1) = 0$. La fonction admet un minimum absolu en $x = 1$ valant :'
+                    . '$$g(1) = 1^2 - 2\ln(1) = 1 - 0 = 1$$'
+                    . '<span style="font-size: 12px; font-weight: 700; color: #15803D;">[1,5 point : 0,5 pt pour le signe + 0,5 pt pour les variations + 0,5 pt pour g(1)=1]</span>'
+                    . '</div>'
+                    . '</div>',
+                'bareme' => 'Dérivée et factorisation : 1,5 pt · Signe, variations et minimum : 1,5 pt (Total : 3 points)',
             ],
             'tier3' => [
-                'title' => 'Palier 3 : Problème de Synthèse National (Type BAC 2 Togo)',
+                'title' => 'Palier 3 : Problème de Synthèse National (Type BAC 2 Togo · Série D)',
                 'xp' => 100,
-                'statement' => 'Extrait conforme BAC 2 Togo (Série D) :<br>On considère la fonction f définie sur ℝ par f(x) = (2x + 1)e^(-x). On note (C) sa courbe représentative dans un repère orthonormé.<br>1. Déterminer les limites de f en -∞ et en +∞. En déduire l\'équation de l\'asymptote à (C).<br>2. Calculer f\'(x) et montrer que f\'(x) = (-2x + 1)e^(-x).<br>3. Dresser le tableau de variations complet de f sur ℝ.<br>4. Démontrer que l\'équation f(x) = 1 admet une unique solution α sur [0, 1/2].',
-                'bareme' => 'Limites et asymptote : 1.5 pt · Calcul dérivée : 1.5 pt · Variations et extremum : 1.5 pt · Justification TVI : 1.5 pt (Total 6 points au BAC).',
-                'solution' => '<b>Corrigé type officiel et grille de correction MEPST :</b><br>1. <b>Limites :</b><br>• En -∞ : lim (2x + 1) = -∞ et lim e^(-x) = +∞. Par produit, <b>lim_{x→-∞} f(x) = -∞</b>.<br>• En +∞ : f(x) = 2x/e^x + 1/e^x. Or lim_{x→+∞} x/e^x = 0 et lim_{x→+∞} e^(-x) = 0. Donc <b>lim_{x→+∞} f(x) = 0</b>.<br>• La droite d\'équation <b>y = 0</b> est donc asymptote horizontale à (C) en +∞.<br><br>2. <b>Dérivée :</b><br>f est de la forme u·v avec u(x) = 2x + 1 ⇒ u\'(x) = 2 et v(x) = e^(-x) ⇒ v\'(x) = -e^(-x).<br>f\'(x) = 2e^(-x) + (2x + 1)(-e^(-x)) = [2 - 2x - 1]e^(-x) = <b>(-2x + 1)e^(-x)</b>.<br><br>3. <b>Variations :</b><br>Comme e^(-x) > 0 pour tout x, f\'(x) a le signe de (-2x + 1).<br>-2x + 1 = 0 ⇔ x = 1/2. f est strictement croissante sur ]-∞, 1/2] et strictement décroissante sur [1/2, +∞[.<br>Son maximum absolu est f(1/2) = (1 + 1)e^(-1/2) = 2/√e ≈ 1.21.<br><br>4. <b>TVI :</b><br>Sur [0, 1/2], f est continue et strictement croissante. f(0) = (0 + 1)e^0 = 1. Comme f(0) = 1, la solution unique est α = 0.',
+                'statement' => '<div class="bac-exam-box">'
+                    . '<div class="bac-exam-header-bar" style="border-bottom: 2px solid #0E1022; padding-bottom: 8px; margin-bottom: 14px;">'
+                    . '  <div style="font-size: 12px; font-weight: 900; letter-spacing: 0.05em; color: #0E1022; text-transform: uppercase;">BACCALAURÉAT DE L\'ENSEIGNEMENT DU SECOND DEGRÉ (TOGO)</div>'
+                    . '  <div style="display: flex; justify-content: space-between; font-size: 12px; color: #475569; font-weight: 700; margin-top: 2px;">'
+                    . '    <span>Session Normale · Épreuve de Mathématiques</span>'
+                    . '    <span>Séries D & C · Coeff. 4 · Durée : 4 heures</span>'
+                    . '  </div>'
+                    . '</div>'
+                    . '<p style="margin: 0 0 12px 0;">Le plan est rapporté à un repère orthonormé $(O, \vec{i}, \vec{j})$ d\'unité graphique $2\text{ cm}$. On considère la fonction numérique $f$ définie sur $\mathbb{R}$ par :</p>'
+                    . '<div style="text-align: center; margin: 12px 0; font-size: 16px;">$$f(x) = (2x + 1)e^{-x}$$</div>'
+                    . '<p style="margin: 0 0 16px 0;">On note $(\mathcal{C}_f)$ la courbe représentative de $f$ dans ce repère.</p>'
+                    . '<div class="bac-questions-list">'
+                    . '  <div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px;">'
+                    . '    <div><b>1.</b> Déterminer les limites de $f$ en $-\infty$ et en $+\infty$. En déduire l\'existence d\'une asymptote horizontale à la courbe $(\mathcal{C}_f)$ dont on précisera l\'équation cartésienne.</div>'
+                    . '    <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '  </div>'
+                    . '  <div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px;">'
+                    . '    <div><b>2.</b> Démontrer que pour tout nombre réel $x$, $f\'(x) = (-2x + 1)e^{-x}$.</div>'
+                    . '    <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '  </div>'
+                    . '  <div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px;">'
+                    . '    <div><b>3.</b> Dresser le tableau de variations complet de $f$ sur $\mathbb{R}$. Préciser la valeur exacte du maximum absolu de $f$.</div>'
+                    . '    <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '  </div>'
+                    . '  <div class="bac-q-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">'
+                    . '    <div><b>4.</b> Démontrer que l\'équation $f(x) = 1$ admet une unique solution $\alpha$ dans l\'intervalle $\left[0, \frac{1}{2}\right]$ et justifier rigoureusement sa valeur exacte.</div>'
+                    . '    <span style="font-weight: 800; color: #2563EB; font-size: 12px; white-space: nowrap;">(1,5 pt)</span>'
+                    . '  </div>'
+                    . '</div>'
+                    . '</div>',
+                'bareme' => 'Limites et asymptote : 1,5 pt · Dérivée : 1,5 pt · Variations et extremum : 1,5 pt · Justification TVI : 1,5 pt (Total : 6 points au BAC)',
+                'solution' => '<div class="bac-solution-box" style="line-height: 1.7;">'
+                    . '<h4 style="font-size: 14.5px; font-weight: 850; color: #166534; margin: 0 0 10px 0;">Corrigé type officiel et grille de correction MEPST (6 points) :</h4>'
+                    . '<div style="margin-bottom: 14px;">'
+                    . '<b>1. Limites et asymptotes (1,5 pt) :</b><br>'
+                    . '• En $-\infty$ : $\lim_{x \to -\infty} (2x + 1) = -\infty$ et $\lim_{x \to -\infty} e^{-x} = +\infty$. Par produit de limites : <b>$$\lim_{x \to -\infty} f(x) = -\infty$$</b><br>'
+                    . '• En $+\infty$ : $f(x) = 2x e^{-x} + e^{-x} = 2 \cdot \frac{x}{e^x} + \frac{1}{e^x}$. Or selon le cours officiel togolais, $\lim_{x \to +\infty} \frac{e^x}{x} = +\infty \implies \lim_{x \to +\infty} \frac{x}{e^x} = 0$, et $\lim_{x \to +\infty} e^{-x} = 0$. Donc : <b>$$\lim_{x \to +\infty} f(x) = 0$$</b><br>'
+                    . '• La droite d\'équation <b>$$y = 0$$</b> est asymptote horizontale à $(\mathcal{C}_f)$ en $+\infty$.'
+                    . '</div>'
+                    . '<div style="margin-bottom: 14px;">'
+                    . '<b>2. Dérivée $f\'(x)$ (1,5 pt) :</b><br>'
+                    . 'Formule produit $(uv)\' = u\'v + uv\'$ avec $u(x) = 2x + 1 \implies u\'(x) = 2$ et $v(x) = e^{-x} \implies v\'(x) = -e^{-x}$.<br>'
+                    . '$$f\'(x) = 2e^{-x} + (2x + 1)(-e^{-x}) = [2 - 2x - 1]e^{-x} = (-2x + 1)e^{-x}$$'
+                    . '</div>'
+                    . '<div style="margin-bottom: 14px;">'
+                    . '<b>3. Variations et extremum (1,5 pt) :</b><br>'
+                    . 'Comme $e^{-x} > 0$ pour tout $x \in \mathbb{R}$, $f\'(x)$ a le même signe que $(-2x + 1)$ :<br>'
+                    . '• $-2x + 1 = 0 \iff x = \frac{1}{2}$.<br>'
+                    . '• Sur $\left]-\infty, \frac{1}{2}\right]$, $f\'(x) \ge 0 \implies f$ est strictement croissante.<br>'
+                    . '• Sur $\left[\frac{1}{2}, +\infty\right[$, $f\'(x) \le 0 \implies f$ est strictement décroissante.<br>'
+                    . '• Maximum absolu : <b>$$f\left(\frac{1}{2}\right) = \left(2 \cdot \frac{1}{2} + 1\right)e^{-1/2} = 2e^{-1/2} = \frac{2}{\sqrt{e}} \approx 1,213$$</b>'
+                    . '</div>'
+                    . '<div>'
+                    . '<b>4. Théorème des valeurs intermédiaires (TVI) (1,5 pt) :</b><br>'
+                    . '• Sur le segment $\left[0, \frac{1}{2}\right]$, $f$ est continue et strictement croissante.<br>'
+                    . '• $f(0) = (0 + 1)e^0 = 1$ et $f\left(\frac{1}{2}\right) = \frac{2}{\sqrt{e}} \approx 1,213 > 1$.<br>'
+                    . '• Le nombre $1$ est atteint exactement en $x = 0$. Par stricte monotonie, l\'équation $f(x) = 1$ admet une <b>unique solution</b> sur $\left[0, \frac{1}{2}\right]$, qui est <b>$$\alpha = 0$$</b>.'
+                    . '</div>'
+                    . '</div>',
             ],
             'suggestions' => [
                 'Comment rédiger le TVI sans perdre de points au BAC ?',
