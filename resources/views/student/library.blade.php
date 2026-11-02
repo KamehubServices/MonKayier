@@ -921,8 +921,8 @@
                 <span>Analyse pédagogique en cours…</span>
             </div>
 
-            {{-- TIROIR 1 : SUGGESTIONS RAPIDES ADAPTÉES (Affichable / Masquable) --}}
-            <div id="biblioSuggestionsDrawer" class="mk-suggestions-drawer">
+            {{-- TIROIR 1 : SUGGESTIONS RAPIDES ADAPTÉES (Masqué par défaut, affichable à volonté) --}}
+            <div id="biblioSuggestionsDrawer" class="mk-suggestions-drawer is-collapsed">
                 <div class="mk-drawer-header">
                     <span class="mk-drawer-title">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.5"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path><line x1="9" y1="21" x2="15" y2="21"></line></svg>
@@ -972,9 +972,9 @@
             {{-- BARRE D'OUTILS COMPACTE : AFFICHER / MASQUER SUGGESTIONS & CLAVIER SCIENTIFIQUE --}}
             <div class="mk-chat-tools-bar">
                 <div class="mk-chat-tools-left">
-                    <button type="button" id="biblioBtnToggleSug" class="mk-tool-toggle-btn is-active" onclick="window.mkToggleChatDrawer('suggestions', 'biblio')">
+                    <button type="button" id="biblioBtnToggleSug" class="mk-tool-toggle-btn" onclick="window.mkToggleChatDrawer('suggestions', 'biblio')">
                         <svg class="mk-tool-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path><line x1="9" y1="21" x2="15" y2="21"></line></svg>
-                        <span class="mk-tool-state-text">Masquer idées</span>
+                        <span class="mk-tool-state-text">Idées</span>
                         <svg class="mk-tool-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <button type="button" id="biblioBtnToggleKbd" class="mk-tool-toggle-btn" onclick="window.mkToggleChatDrawer('scikbd', 'biblio')">
