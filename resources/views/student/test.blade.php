@@ -3236,6 +3236,12 @@ body.page-test-niveau .lay .w {
                     </div>
                     <span style="background: #F0FDF4; border: 1px solid #BBF7D0; color: #166534; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">100% Confidentiel</span>
                 </div>
+
+                {{-- Message d'enregistrement fluide (sans reload) --}}
+                <div id="reportCardSuccessAlert" style="display:none;background:#ECFDF5;border:1.5px solid #A7F3D0;color:#065F46;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:700;align-items:center;gap:10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span id="reportCardSuccessText">Bulletin enregistré avec succès ! Vos notes ont été prises en compte.</span>
+                </div>
                 
                 <form id="reportCardForm" onsubmit="handleUploadReportCard(event)">
                     @csrf
@@ -3342,40 +3348,38 @@ body.page-test-niveau .lay .w {
 
             {{-- Liste des bulletins enregistrés --}}
             <div class="tn-saved-reports-card">
-                <div class="tn-side-title">Mes Bulletins Enregistrés ({{ count($reportCards) }})</div>
+                <div class="tn-side-title" id="savedReportsTitle">Mes Bulletins Enregistrés ({{ count($reportCards) }})</div>
 
                 <div style="margin-top: 10px; padding-bottom: 10px; border-bottom: 1px solid #E2E8F0;">
-                    <button type="button" class="btn-method-action btn-method-qcm" onclick="goToPersonalizedParcoursWithReports()">
+                    <button type="button" class="btn-method-action btn-method-qcm" id="btnActivateParcoursWithReports" onclick="goToPersonalizedParcoursWithReports()">
                         <span>Activer et ouvrir mon parcours calibré avec mes bulletins</span>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
 
-                @if(count($reportCards) > 0)
-                    <div style="display:flex;flex-direction:column;gap:10px" id="savedReportsList">
-                        @foreach($reportCards as $rc)
-                            <div class="tn-report-item" id="reportCardRow-{{ $rc->id }}">
-                                <div>
-                                    <div class="tn-report-name">{{ $rc->title }}</div>
-                                    <div style="font-size:11px;color:#64748B;margin-top:2px">
-                                        {{ $rc->school_year }} · 
-                                        @if($rc->overall_average)
-                                            Moyenne : <strong>{{ $rc->overall_average }}/20</strong> ·
-                                        @endif
-                                        <span class="tn-report-status">{{ $rc->ai_status === 'pending_analysis' ? 'Analyse IA programmée' : 'Vérifié' }}</span>
-                                    </div>
+                <div style="display:{{ count($reportCards) > 0 ? 'flex' : 'none' }};flex-direction:column;gap:10px" id="savedReportsList">
+                    @foreach($reportCards as $rc)
+                        <div class="tn-report-item" id="reportCardRow-{{ $rc->id }}">
+                            <div>
+                                <div class="tn-report-name">{{ $rc->title }}</div>
+                                <div style="font-size:11px;color:#64748B;margin-top:2px">
+                                    {{ $rc->school_year }} · 
+                                    @if($rc->overall_average)
+                                        Moyenne : <strong>{{ $rc->overall_average }}/20</strong> ·
+                                    @endif
+                                    <span class="tn-report-status">{{ $rc->ai_status === 'pending_analysis' ? 'Analyse IA programmée' : 'Vérifié' }}</span>
                                 </div>
-                                <button type="button" class="tn-delete-btn" onclick="deleteReportCard('{{ $rc->id }}')">
-                                    Supprimer
-                                </button>
                             </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div style="padding:24px;text-align:center;color:#64748B;font-size:12.5px" id="emptyReportsMsg">
-                        Aucun bulletin scolaire importé pour le moment. Vous pouvez en importer un pour affiner la précision de votre parcours à 95%.
-                    </div>
-                @endif
+                            <button type="button" class="tn-delete-btn" onclick="deleteReportCard('{{ $rc->id }}')">
+                                Supprimer
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div style="display:{{ count($reportCards) === 0 ? 'block' : 'none' }};padding:24px;text-align:center;color:#64748B;font-size:12.5px" id="emptyReportsMsg">
+                    Aucun bulletin scolaire importé pour le moment. Vous pouvez en importer un pour affiner la précision de votre parcours à 95%.
+                </div>
 
                 <div class="tn-pedagogical-note" style="margin-top:auto">
                     <strong>Indice de fiabilité :</strong> Un test de niveau seul calibre votre parcours avec une précision de <strong>82%</strong>. L'ajout de 1 ou 2 bulletins scolaires porte la fiabilité à <strong>95%</strong> en intégrant la régularité de vos résultats en classe.
@@ -3751,6 +3755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sectionTest').style.display = 'none';
     document.getElementById('sectionReports').style.display = 'none';
     document.getElementById('sectionResults').style.display = 'none';
+    setupReportCardKeyboardNav();
 });
 
 // Chronomètre ascendant
@@ -4045,11 +4050,109 @@ function computeLiveAverage() {
     }
 }
 
+function showReportCardFeedback(msg, isSuccess = true) {
+    const alertBox = document.getElementById('reportCardSuccessAlert');
+    const alertText = document.getElementById('reportCardSuccessText');
+    if (!alertBox || !alertText) return;
+
+    alertText.innerText = msg;
+    if (isSuccess) {
+        alertBox.style.background = '#ECFDF5';
+        alertBox.style.borderColor = '#A7F3D0';
+        alertBox.style.color = '#065F46';
+    } else {
+        alertBox.style.background = '#FEF2F2';
+        alertBox.style.borderColor = '#FECACA';
+        alertBox.style.color = '#DC2626';
+    }
+    alertBox.style.display = 'flex';
+    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderNewReportCardItem(card, totalCards) {
+    // 1. Mettre à jour le compteur du titre
+    const titleEl = document.getElementById('savedReportsTitle');
+    const count = (totalCards !== undefined && totalCards !== null) ? totalCards : (document.querySelectorAll('.tn-report-item').length + 1);
+    if (titleEl) {
+        titleEl.innerText = `Mes Bulletins Enregistrés (${count})`;
+    }
+
+    // 2. Masquer le message vide s'il existe
+    const emptyMsg = document.getElementById('emptyReportsMsg');
+    if (emptyMsg) {
+        emptyMsg.style.display = 'none';
+    }
+
+    // 3. Récupérer ou créer le conteneur de liste
+    let listContainer = document.getElementById('savedReportsList');
+    if (!listContainer) {
+        listContainer = document.createElement('div');
+        listContainer.id = 'savedReportsList';
+        listContainer.style.display = 'flex';
+        listContainer.style.flexDirection = 'column';
+        listContainer.style.gap = '10px';
+        const cardBox = document.querySelector('.tn-saved-reports-card');
+        const note = cardBox ? cardBox.querySelector('.tn-pedagogical-note') : null;
+        if (cardBox && note) {
+            cardBox.insertBefore(listContainer, note);
+        } else if (cardBox) {
+            cardBox.appendChild(listContainer);
+        }
+    } else {
+        listContainer.style.display = 'flex';
+    }
+
+    // 4. Supprimer un ancien élément avec le même id s'il existait déjà
+    const existing = document.getElementById(`reportCardRow-${card.id}`);
+    if (existing) {
+        existing.remove();
+    }
+
+    // 5. Créer la ligne du bulletin
+    const item = document.createElement('div');
+    item.className = 'tn-report-item';
+    item.id = `reportCardRow-${card.id}`;
+
+    const avgStr = (card.overall_average !== null && card.overall_average !== undefined)
+        ? `Moyenne : <strong>${card.overall_average}/20</strong> · `
+        : '';
+    const statusText = (card.ai_status === 'pending_analysis') ? 'Analyse IA programmée' : 'Vérifié';
+
+    item.innerHTML = `
+        <div>
+            <div class="tn-report-name">${card.title}</div>
+            <div style="font-size:11px;color:#64748B;margin-top:2px">
+                ${card.school_year || '2026-2027'} · 
+                ${avgStr}
+                <span class="tn-report-status">${statusText}</span>
+            </div>
+        </div>
+        <button type="button" class="tn-delete-btn" onclick="deleteReportCard('${card.id}')">
+            Supprimer
+        </button>
+    `;
+
+    listContainer.prepend(item);
+
+    // 6. Mettre en valeur le bouton d'activation du parcours
+    const actBtn = document.getElementById('btnActivateParcoursWithReports');
+    if (actBtn) {
+        actBtn.style.boxShadow = '0 0 0 3px rgba(212, 242, 92, 0.55)';
+        actBtn.style.transform = 'scale(1.02)';
+        actBtn.style.transition = 'all 0.25s ease';
+        setTimeout(() => {
+            actBtn.style.boxShadow = '';
+            actBtn.style.transform = '';
+        }, 1500);
+    }
+}
+
 function handleUploadReportCard(e) {
     e.preventDefault();
     const form = document.getElementById('reportCardForm');
     const formData = new FormData(form);
     const submitBtn = document.getElementById('submitReportBtn');
+    const origBtnHtml = submitBtn.innerHTML;
 
     submitBtn.disabled = true;
     submitBtn.innerText = "Enregistrement en cours...";
@@ -4065,20 +4168,25 @@ function handleUploadReportCard(e) {
     .then(r => r.json())
     .then(data => {
         submitBtn.disabled = false;
-        submitBtn.innerText = "Enregistrer et calibrer avec ce bulletin";
+        submitBtn.innerHTML = origBtnHtml;
 
         if (data.success) {
-            alert("Bulletin enregistré ! Votre indice de fiabilité est rehaussé.");
-            location.reload();
+            // Affichage sans reload de la confirmation
+            showReportCardFeedback(data.message || "Bulletin enregistré avec succès ! Vos notes ont été prises en compte.");
+
+            // Mise à jour de la liste des bulletins dans le DOM
+            if (data.card) {
+                renderNewReportCardItem(data.card, data.total_cards);
+            }
         } else {
-            alert(data.message || "Erreur lors de l'enregistrement du bulletin.");
+            showReportCardFeedback(data.message || "Erreur lors de l'enregistrement du bulletin.", false);
         }
     })
     .catch(err => {
         console.error(err);
         submitBtn.disabled = false;
-        submitBtn.innerText = "Enregistrer et calibrer avec ce bulletin";
-        alert("Erreur réseau.");
+        submitBtn.innerHTML = origBtnHtml;
+        showReportCardFeedback("Erreur réseau lors de l'enregistrement.", false);
     });
 }
 
@@ -4098,9 +4206,76 @@ function deleteReportCard(id) {
         if (data.success) {
             const row = document.getElementById(`reportCardRow-${id}`);
             if (row) row.remove();
+
+            const remaining = (data.total_cards !== undefined && data.total_cards !== null)
+                ? data.total_cards
+                : document.querySelectorAll('.tn-report-item').length;
+
+            const titleEl = document.getElementById('savedReportsTitle');
+            if (titleEl) {
+                titleEl.innerText = `Mes Bulletins Enregistrés (${remaining})`;
+            }
+
+            if (remaining === 0) {
+                const listContainer = document.getElementById('savedReportsList');
+                if (listContainer) listContainer.style.display = 'none';
+
+                let emptyMsg = document.getElementById('emptyReportsMsg');
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                }
+            }
+
+            showReportCardFeedback("Bulletin supprimé.", true);
+        } else {
+            showReportCardFeedback("Erreur lors de la suppression.", false);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showReportCardFeedback("Erreur réseau lors de la suppression.", false);
+    });
+}
+
+// Navigation au clavier sur les notes : la touche Entrée passe à la note suivante au lieu d'enregistrer
+function setupReportCardKeyboardNav() {
+    const reportCardForm = document.getElementById('reportCardForm');
+    if (!reportCardForm) return;
+
+    reportCardForm.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const isBulletInput = e.target.classList.contains('bullet-input');
+            const isSelect = e.target.tagName === 'SELECT';
+
+            if (isBulletInput || isSelect) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const inputs = Array.from(reportCardForm.querySelectorAll('.bullet-input'));
+                const currentIndex = inputs.indexOf(e.target);
+
+                if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+                    // Aller au champ de note suivant
+                    inputs[currentIndex + 1].focus();
+                    inputs[currentIndex + 1].select();
+                } else if (currentIndex === inputs.length - 1) {
+                    // Dernière note : focaliser le bouton d'enregistrement
+                    const submitBtn = document.getElementById('submitReportBtn');
+                    if (submitBtn) {
+                        submitBtn.focus();
+                    }
+                } else if (isSelect) {
+                    // Depuis les sélecteurs, aller au premier champ de note
+                    if (inputs.length > 0) {
+                        inputs[0].focus();
+                        inputs[0].select();
+                    }
+                }
+            }
         }
     });
 }
+setupReportCardKeyboardNav();
 
 // NAVIGATION ET VALIDATION GLOBALE AU CLAVIER
 document.addEventListener('keydown', function(e) {

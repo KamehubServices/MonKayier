@@ -2150,8 +2150,18 @@ class StudentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Bulletin scolaire enregistré avec succès !',
+            'message' => 'Bulletin scolaire enregistré avec succès ! Vos notes ont été prises en compte pour votre parcours.',
             'card_id' => $cardId,
+            'card' => [
+                'id' => $cardId,
+                'title' => "Bulletin {$term} — {$classLevel}",
+                'school_year' => $request->input('school_year', '2026-2027'),
+                'class_level' => $classLevel,
+                'term' => $term,
+                'overall_average' => $overallAverage,
+                'ai_status' => $filePath ? 'pending_analysis' : 'manual_verified',
+            ],
+            'total_cards' => DB::table('student_report_cards')->where('student_user_id', $student->id)->count(),
         ]);
     }
 
@@ -2163,7 +2173,12 @@ class StudentController extends Controller
             ->where('student_user_id', $student->id)
             ->delete();
 
-        return response()->json(['success' => (bool) $deleted]);
+        $remainingCount = DB::table('student_report_cards')->where('student_user_id', $student->id)->count();
+
+        return response()->json([
+            'success' => (bool) $deleted,
+            'total_cards' => $remainingCount,
+        ]);
     }
 
     /**
