@@ -1998,7 +1998,7 @@ window.mkSplitTextIntoSpeechChunks = function(rawText, maxChunkLen) {
     return chunks;
 };
 
-window.mkFallbackBrowserNeuralSpeech = function(text, voiceKey, onEndCallback, sessionId) {
+window.mkFallbackBrowserNeuralSpeech = function(text, voiceKey, onEndCallback, sessionId, btnEl) {
     const activeSession = sessionId !== undefined ? sessionId : window.mkSpeechSessionId;
     if (!('speechSynthesis' in window)) {
         if (onEndCallback) onEndCallback();
@@ -2006,9 +2006,16 @@ window.mkFallbackBrowserNeuralSpeech = function(text, voiceKey, onEndCallback, s
     }
     window.speechSynthesis.cancel();
 
+    if (btnEl) {
+        window.mkCurrentTtsBtn = btnEl;
+        btnEl.classList.add('is-speaking');
+        btnEl.innerHTML = `<span class="mk-tts-wave"><i></i><i></i><i></i></span><span>Arrêter</span>`;
+    }
+
     // Découper en phrases courtes (max 180 caractères) pour contourner le bug Chromium des 14 secondes
     const chunks = window.mkSplitTextIntoSpeechChunks(text, 180);
     if (chunks.length === 0) {
+        if (btnEl) window.mkResetTtsBtn(btnEl);
         if (onEndCallback) onEndCallback();
         return;
     }
@@ -2032,13 +2039,15 @@ window.mkFallbackBrowserNeuralSpeech = function(text, voiceKey, onEndCallback, s
                 clearInterval(window.mkSpeechKeepAliveTimer);
                 window.mkSpeechKeepAliveTimer = null;
             }
+            if (btnEl) window.mkResetTtsBtn(btnEl);
+            if (window.mkCurrentTtsBtn === btnEl) window.mkCurrentTtsBtn = null;
             if (onEndCallback) onEndCallback();
             return;
         }
         const utter = new SpeechSynthesisUtterance(chunks[idx++]);
         utter.lang = 'fr-FR';
         if (preferred) utter.voice = preferred;
-        utter.rate = 1.02;
+        utter.rate = 1.05;
         utter.pitch = voiceKey === 'afi' ? 1.06 : 1.0;
         utter.onend = speakNext;
         utter.onerror = speakNext;

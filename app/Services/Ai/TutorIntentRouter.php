@@ -182,10 +182,10 @@ class TutorIntentRouter
         $maxWords = $profile['max_words'];
         $maxTokens = $profile['max_tokens'];
 
-        // En appel vocal, on garde un rythme de conversation orale
+        // En appel vocal, rythme de conversation vivante de vive voix (dialogue direct et réactif)
         if ($mode === 'voice_call') {
-            $maxWords = min($maxWords, $intent === 'argument' ? 180 : 120);
-            $maxTokens = min($maxTokens, 450);
+            $maxWords = min($maxWords, $intent === 'argument' ? 65 : 45);
+            $maxTokens = min($maxTokens, 160);
         }
 
         return [

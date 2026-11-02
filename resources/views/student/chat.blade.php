@@ -3192,13 +3192,13 @@ function startLiveVoiceListening() {
                 if (window.mkAutoResizeTextarea) window.mkAutoResizeTextarea(input);
             }
 
-            // Détection automatique de fin de phrase après 1,35 seconde de silence
+            // Détection automatique de fin de phrase après 0,70 seconde de silence (rythme d'une vraie conversation vivante)
             if (liveVoiceSilenceTimer) clearTimeout(liveVoiceSilenceTimer);
             liveVoiceSilenceTimer = setTimeout(() => {
                 if (isLiveVoiceCallActive && liveVoiceAccumulatedText.length > 2) {
                     finalizeLiveVoiceTurn();
                 }
-            }, 1350);
+            }, 700);
         }
     };
 
@@ -3321,9 +3321,16 @@ function clearChapterChatHistory() {
 
 // Synthèse Vocale Neurale Humaine (Lecture audio de la réponse de l'IA)
 function speakText(text, btnEl, onDoneCallback) {
+    const sel = document.getElementById('tutorVoiceSelect');
+    const voice = sel ? sel.value : (localStorage.getItem('mk_tutor_voice') || 'kodjo');
+
+    // En appel vocal en direct, priorité absolue à la réactivité humaine (démarrage instantané en ~30ms via la synthèse locale du navigateur)
+    if (isLiveVoiceCallActive && window.mkFallbackBrowserNeuralSpeech && ('speechSynthesis' in window)) {
+        window.mkFallbackBrowserNeuralSpeech(text, voice, onDoneCallback, window.mkSpeechSessionId, btnEl);
+        return;
+    }
+
     if (window.mkSpeakHuman) {
-        const sel = document.getElementById('tutorVoiceSelect');
-        const voice = sel ? sel.value : (localStorage.getItem('mk_tutor_voice') || 'kodjo');
         window.mkSpeakHuman(text, btnEl, voice, onDoneCallback);
     } else if (typeof onDoneCallback === 'function') {
         onDoneCallback();

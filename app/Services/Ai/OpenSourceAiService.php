@@ -253,8 +253,8 @@ RÈGLES D'EXCELLENCE :
         $sub = $route['subtype'] ?? null;
 
         if ($mode === 'voice_call') {
-            return "MODE APPEL VOCAL EN DIRECT ACTIF : tu parles à l'élève, mains libres.
-FORMAT IMPOSÉ : réponse naturelle et orale, {$words} mots maximum (limite stricte), sans liste ni titre. Une question simple appelle une ou deux phrases seulement. Termine par une très courte question orale pour relancer l'échange uniquement si la réponse est un peu développée.";
+            return "MODE APPEL VOCAL EN DIRECT ACTIF : tu es au téléphone de vive voix avec l'élève.
+FORMAT STRICT : style 100% oral, chaleureux, concis et ultra-réactif (30 à 45 mots maximum). Pas de puces, pas de titres, pas de longues formules lues mot à mot. Réponds à l'idée clé en deux phrases simples, puis termine par une courte question orale (« tu me suis ? », « tu vois l'exemple ? ») pour maintenir une vraie conversation vivante.";
         }
 
         if ($mode === 'oral_exam' || str_contains($route['normalized'] ?? '', 'interroge moi') || str_contains($route['normalized'] ?? '', 'oral du bac') || str_contains($route['normalized'] ?? '', 'simulation orale')) {
