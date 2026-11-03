@@ -2319,8 +2319,9 @@ class StudentController extends Controller
 
         usort($subjectsList, fn($a, $b) => $a['priority'] <=> $b['priority']);
 
-        // Exercice initial pré-chargé (Mathématiques BAC 2 Terminale D)
-        $defaultExercise = $this->getPrecalibratedExercise('MATHS', 'Limites, continuité et TVI', 'medium', 'exam');
+        // Exercice initial pré-chargé (Mathématiques BAC 2 Terminale D) avec notation LaTeX
+        $generator = app(\App\Services\Ai\ExerciseGeneratorService::class);
+        $defaultExercise = $generator->generate('MATHS', 'Limites, continuité et TVI', 'medium', 'exam', ['Limites, continuité et TVI'], $student);
 
         // Historique réel des copies soumises par l'élève (vierge par défaut)
         $examHistory = session('student_exam_history_' . $student->id, []);
@@ -2340,12 +2341,16 @@ class StudentController extends Controller
      */
     public function generateExercise(Request $request)
     {
+        $student = $this->getStudent();
         $subjectCode = $request->input('subject_code', 'MATHS');
         $rawChapters = $request->input('chapters', $request->input('chapter', 'Limites, continuité et TVI'));
+        $chaptersArray = is_array($rawChapters) ? $rawChapters : [(string)$rawChapters];
         $chapter = is_array($rawChapters) ? implode(' · ', $rawChapters) : (string)$rawChapters;
         $difficulty = $request->input('difficulty', 'medium');
         $format = $request->input('format', 'exam');
-        $exercise = $this->getPrecalibratedExercise($subjectCode, $chapter, $difficulty, $format);
+
+        $generator = app(\App\Services\Ai\ExerciseGeneratorService::class);
+        $exercise = $generator->generate($subjectCode, $chapter, $difficulty, $format, $chaptersArray, $student);
 
         return response()->json([
             'success' => true,

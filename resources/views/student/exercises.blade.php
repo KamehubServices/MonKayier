@@ -2026,10 +2026,37 @@ let uploadedPhotoFile = null;
 let currentSubmissionAnalysis = null;
 let homeworkHistory = @json($examHistory ?? []);
 
+function renderKaTeXIn(target = document.body) {
+    if (!target) return;
+    if (typeof renderMathInElement === 'function') {
+        try {
+            renderMathInElement(target, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\[', right: '\\]', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false }
+                ],
+                throwOnError: false
+            });
+        } catch (e) {
+            console.warn('KaTeX render notice:', e);
+        }
+    } else {
+        setTimeout(() => renderKaTeXIn(target), 300);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     renderChaptersForSubject(activeSubjectCode);
     updateHistoryCounter();
     updateTopBackButton(1);
+    if (currentExercise) {
+        renderOfficialExamAtelier(currentExercise);
+    }
+    setTimeout(() => {
+        renderKaTeXIn(document.getElementById('examSectionsContainer'));
+    }, 400);
 });
 
 // =========================================================
@@ -2295,6 +2322,25 @@ function renderOfficialExamAtelier(ex) {
                 `;
                 container.appendChild(secCard);
             });
+            renderKaTeXIn(container);
+        }
+    }
+
+    // Mise à jour des indices dans le tiroir du Tuteur IA
+    if (ex.hints && ex.hints.length) {
+        const sugList = document.querySelector('#tutorSuggestionsDrawer .mk-suggestions-list');
+        if (sugList) {
+            let sugHtml = '';
+            ex.hints.forEach((h, idx) => {
+                const escapedH = escapeHtml(h).replace(/'/g, "\\'");
+                sugHtml += `
+                    <button type="button" class="mk-sug-pill" onclick="sendTutorPrompt('${escapedH}')">
+                        <span>Indice ${idx + 1} : ${escapeHtml(h.length > 50 ? h.substring(0, 47) + '...' : h)}</span>
+                        <span class="mk-sug-arrow">→</span>
+                    </button>
+                `;
+            });
+            sugList.innerHTML = sugHtml;
         }
     }
 
@@ -2502,6 +2548,7 @@ function displaySubmissionResults(analysis, modelSolution) {
     sBadge.querySelector('.h-score-val').textContent = analysis.score + ' / 20';
 
     document.getElementById('atelierViewTabs').style.display = 'flex';
+    renderKaTeXIn(document.getElementById('viewSolutionWrap'));
 }
 
 function showUnlockedCorrection() {
