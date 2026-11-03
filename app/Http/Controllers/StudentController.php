@@ -3048,51 +3048,36 @@ class StudentController extends Controller
 
     /**
      * 15. Séance de révision interactive guidée par le cours officiel
+     * Redirige automatiquement vers le Tuteur Révision IA unifié avec le cours contextuel.
      */
     public function seance(Request $request, ?string $taskId = null)
     {
         $student = $this->getStudent();
 
+        $courseId = null;
+        $subjectId = null;
+
         if ($taskId) {
             $task = DB::table('revision_tasks')
                 ->leftJoin('learning_resources', 'revision_tasks.resource_id', '=', 'learning_resources.id')
-                ->leftJoin('subjects', 'learning_resources.subject_id', '=', 'subjects.id')
-                ->leftJoin('curriculum_objectives', 'revision_tasks.objective_id', '=', 'curriculum_objectives.id')
                 ->where('revision_tasks.id', $taskId)
-                ->select(
-                    'revision_tasks.*',
-                    'learning_resources.title as course_title',
-                    'learning_resources.summary as course_summary',
-                    'subjects.name as subject_name',
-                    'curriculum_objectives.description as objective_desc'
-                )
+                ->select('revision_tasks.*', 'learning_resources.subject_id as lr_subject_id')
                 ->first();
-        } else {
-            $task = null;
-        }
 
-        if ($task) {
-            $sessionGenerator = app(\App\Services\PathEngine\LearningSessionGenerator::class);
-            $session = $sessionGenerator->generateSession($task);
-            $session['task_id'] = $task->id;
-            $session['course_id'] = $task->resource_id;
-            $session['course_title'] = $task->course_title ?? 'Cours officiel';
-            $session['course_summary'] = $task->course_summary ?? '';
-            $session['priority'] = $task->priority;
-            $session['has_real_course'] = !empty($task->resource_id);
+            if ($task) {
+                $courseId = $task->resource_id ?? null;
+                $subjectId = $task->subject_id ?? ($task->lr_subject_id ?? null);
+            }
         } else {
             $session = $this->pathEngine->getDailySession($student->id);
+            $courseId = $session['course_id'] ?? ($session['resource_id'] ?? null);
+            $subjectId = $session['subject_id'] ?? null;
         }
 
-        if (empty($session['official_exam'])) {
-            $courseObj = (object)[
-                'subject_id' => $task ? ($task->subject_id ?? null) : null,
-                'title' => $session['course_title'] ?? '',
-            ];
-            $session['official_exam'] = $this->findOfficialExamForCourse($courseObj, $session['subject'] ?? 'MATHS');
-        }
-
-        return view('student.seance', compact('student', 'session'));
+        return redirect()->route('student.chat', array_filter([
+            'course' => $courseId,
+            'subject' => $subjectId,
+        ]));
     }
 
     /**
@@ -3110,11 +3095,11 @@ class StudentController extends Controller
                 'success' => $success,
                 'score' => $score,
                 'message' => 'Séance validée avec succès ! Ton parcours et tes compétences ont été mis à jour.',
-                'redirect_url' => '/student/dashboard',
+                'redirect_url' => '/student/parcours',
             ]);
         }
 
-        return redirect()->route('student.dashboard')->with('success', "Séance validée avec succès ({$score}/20) ! Ton parcours personnel s'est actualisé.");
+        return redirect()->route('student.parcours')->with('success', "Séance validée avec succès ({$score}/20) ! Ton parcours personnel s'est actualisé.");
     }
 
     public function history()

@@ -157,7 +157,7 @@
         </h1>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <a class="bt l" href="{{ route('student.seance') }}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 9px 18px; text-decoration: none; font-weight: 700; border-radius: 999px; box-shadow: 0 4px 14px rgba(212,242,92,0.35);">
+        <a class="bt l" href="{{ route('student.chat') }}" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 9px 18px; text-decoration: none; font-weight: 700; border-radius: 999px; box-shadow: 0 4px 14px rgba(212,242,92,0.35);">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0E1022" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             Examen Blanc
         </a>

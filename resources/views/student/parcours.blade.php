@@ -1308,12 +1308,8 @@ html, body {
                 <b>Objectif d'examen :</b> Maîtriser le chapitre et valider les 3 paliers d'entraînement au BAC 2 Togo.
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <a href="{{ route('student.seance') }}" class="btn-continue-revision" style="background: #D4F25C; color: #0E1022; flex: 1.2;">
-                    <span>Séance du jour (25 min)</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </a>
-                <a href="{{ route('student.chat', ['subject' => $activeNode['subject_id'], 'course' => $activeNode['resource_id'] ?? '', 'step' => $activeNode['step']]) }}" class="btn-continue-revision" style="background: #0E1022; color: #FFFFFF; flex: 1;">
-                    <span>Révision IA</span>
+                <a href="{{ route('student.chat', ['subject' => $activeNode['subject_id'], 'course' => $activeNode['resource_id'] ?? '', 'step' => $activeNode['step']]) }}" class="btn-continue-revision" style="background: #D4F25C; color: #0E1022; flex: 1;">
+                    <span>Lancer la séance de révision · {{ $activeNode['duration'] ?? '25 min' }}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </a>
             </div>

@@ -30,7 +30,7 @@
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
-            <a class="bt l" href="/student/seance/{{ $dailySession['task_id'] ?? '' }}" style="padding: 10px 20px; font-size: 13.5px; font-weight: 800; background: linear-gradient(135deg, #14325c 0%, #1e4a84 100%); color: #FFFFFF; border: 1.5px solid #14325c;">
+            <a class="bt l" href="{{ route('student.chat', array_filter(['course' => $dailySession['resource_id'] ?? ($dailySession['course_id'] ?? null), 'subject' => $dailySession['subject_id'] ?? null])) }}" style="padding: 10px 20px; font-size: 13.5px; font-weight: 800; background: linear-gradient(135deg, #14325c 0%, #1e4a84 100%); color: #FFFFFF; border: 1.5px solid #14325c;">
                 Lancer la séance · {{ $dailySession['duration'] ?? '25 min' }}
             </a>
             <a class="bt" href="/student/parcours" style="background: #F1F5F9; border: 1px solid #CBD5E1; color: #14325c; padding: 10px 18px; font-size: 13.5px;">
@@ -119,7 +119,7 @@
             <b style="font-size: 13.5px; display:block; margin: 4px 0 6px 0; color: #0E1022;">{{ $stats['coach_title'] ?? '« Priorité adaptative »' }}</b>
             <div class="mu" style="font-size: 12px; line-height: 1.45;">{{ $stats['coach_body'] ?? 'Programme d\'apprentissage personnalisé selon tes résultats récents.' }}</div>
         </div>
-        <a class="bt" href="/student/seance/{{ $dailySession['task_id'] ?? '' }}" style="padding: 8px 14px; font-size: 12.5px; text-align: center; margin-top: 8px;">Démarrer</a>
+        <a class="bt" href="{{ route('student.chat', array_filter(['course' => $dailySession['resource_id'] ?? ($dailySession['course_id'] ?? null), 'subject' => $dailySession['subject_id'] ?? null])) }}" style="padding: 8px 14px; font-size: 12.5px; text-align: center; margin-top: 8px;">Démarrer</a>
     </div>
 </div>
 @endsection
